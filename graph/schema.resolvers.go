@@ -7,13 +7,18 @@ package graph
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/hemanta212/hackernews-go-graphql/graph/model"
 )
 
 // CreateLink is the resolver for the createLink field.
 func (r *mutationResolver) CreateLink(ctx context.Context, input model.NewLink) (*model.Link, error) {
-	panic(fmt.Errorf("not implemented: CreateLink - createLink"))
+	return &model.Link{
+		Title:   input.Title,
+		Address: input.Address,
+		Author:  &model.User{Username: "something"},
+	}, nil
 }
 
 // CreateUser is the resolver for the createUser field.
@@ -40,6 +45,7 @@ func (r *queryResolver) Links(ctx context.Context) ([]*model.Link, error) {
 		Author:  &model.User{Username: "admin"},
 	}
 	links = append(links, &dummyLink)
+	http.AllowQuerySemicolons(h http.Handler)
 	return links, nil
 }
 
