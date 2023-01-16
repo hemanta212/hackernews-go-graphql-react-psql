@@ -7,7 +7,6 @@ package graph
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/hemanta212/hackernews-go-graphql/graph/model"
 )
@@ -45,7 +44,6 @@ func (r *queryResolver) Links(ctx context.Context) ([]*model.Link, error) {
 		Author:  &model.User{Username: "admin"},
 	}
 	links = append(links, &dummyLink)
-	http.AllowQuerySemicolons(h http.Handler)
 	return links, nil
 }
 
