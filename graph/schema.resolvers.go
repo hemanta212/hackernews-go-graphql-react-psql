@@ -7,13 +7,22 @@ package graph
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/hemanta212/hackernews-go-graphql/graph/model"
+	"github.com/hemanta212/hackernews-go-graphql/internal/links"
 )
 
 // CreateLink is the resolver for the createLink field.
 func (r *mutationResolver) CreateLink(ctx context.Context, input model.NewLink) (*model.Link, error) {
+	link := links.Link{
+		Title:   input.Title,
+		Address: input.Address,
+	}
+	linkID := link.Save()
+
 	return &model.Link{
+		ID:      strconv.FormatInt(linkID, 10),
 		Title:   input.Title,
 		Address: input.Address,
 		Author:  &model.User{Username: "something"},
@@ -37,14 +46,13 @@ func (r *mutationResolver) RefreshToken(ctx context.Context, input model.Refresh
 
 // Links is the resolver for the links field.
 func (r *queryResolver) Links(ctx context.Context) ([]*model.Link, error) {
-	var links []*model.Link
-	dummyLink := model.Link{
-		Title:   "our dummy link",
-		Address: "https://address.org",
-		Author:  &model.User{Username: "admin"},
+	var resultLinks []*model.Link
+	var dbLinks []links.Link
+	dbLinks = links.GetAll()
+	for _, link := range dbLinks {
+		resultLinks = append(resultLinks, &model.Link{ID: link.ID, Title: link.Title, Address: link.Address})
 	}
-	links = append(links, &dummyLink)
-	return links, nil
+	return resultLinks, nil
 }
 
 // Mutation returns MutationResolver implementation.
