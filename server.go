@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/hemanta212/hackernews-go-graphql/graph"
+	"github.com/hemanta212/hackernews-go-graphql/internal/auth"
 	database "github.com/hemanta212/hackernews-go-graphql/internal/pkg/db/mysql"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -28,6 +29,7 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+	router.Use(auth.Middleware())
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
