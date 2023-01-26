@@ -4,14 +4,20 @@
 
 type Link {
     id: ID!
-    title: String!
-    author: User!
-    address: String!
+    description: String!
+    postedBy: User!
+    url: String!
 }
 
 type User{
      id: ID!
      username: String!
+     email: String
+}
+
+type AuthPayload {
+     token: String
+     user: User
 }
 
 type Query{
@@ -25,11 +31,12 @@ input RefreshTokenInput{
 input NewUser{
       username: String!
       password: String!
+      email: String
 }
 
 input NewLink{
-      title: String!
-      address: String!
+      description: String!
+      url: String!
 }
 
 input Login{
@@ -39,7 +46,7 @@ input Login{
 
 type Mutation {
      createLink(input: NewLink!): Link!
-     createUser(input: NewUser!): String!
-     login(input: Login!): String!
+     createUser(input: NewUser!): AuthPayload
+     login(input: Login!): AuthPayload
      refreshToken(input: RefreshTokenInput!): String!
 }

@@ -11,7 +11,6 @@ const Header = () => {
         <Link to="/" className="no-underline black">
           <div className="fw7 mr1">Hacker News </div>
         </Link>
-
         <Link to="/" className="ml1 no-underline black">
           new
         </Link>
@@ -19,14 +18,12 @@ const Header = () => {
         <Link to="/search" className="ml1 no-underline black">
           search
         </Link>
-        {authToken && (
-          <div className="flex">
-            <div classname="ml1">|</div>
-            <Link to="/create" className="ml1 no-underline black">
-              submit
-            </Link>
-          </div>
-        )}
+        <div className="flex">
+          <div classname="ml1">|</div>
+          <Link to="/create" className="ml1 no-underline black">
+            submit
+          </Link>
+        </div>
       </div>
       <div className="flex flex-fixed">
         {authToken ? (

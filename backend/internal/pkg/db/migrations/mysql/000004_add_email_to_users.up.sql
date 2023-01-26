@@ -1,0 +1,2 @@
+ALTER TABLE `Users`
+ADD COLUMN Email VARCHAR (200);

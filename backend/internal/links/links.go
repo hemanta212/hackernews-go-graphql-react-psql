@@ -8,19 +8,19 @@ import (
 )
 
 type Link struct {
-	ID      string
-	Title   string
-	Address string
-	Author  *users.User
+	ID          string
+	Description string
+	Url         string
+	PostedBy    *users.User
 }
 
 func (link Link) Save() int64 {
-	stmt, err := database.Db.Prepare("INSERT INTO Links(Title, Address, UserID) VALUES(?, ?, ?)")
+	stmt, err := database.Db.Prepare("INSERT INTO Links(Description, Url, UserID) VALUES(?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	res, err := stmt.Exec(link.Title, link.Address, link.Author.ID)
+	res, err := stmt.Exec(link.Description, link.Url, link.PostedBy.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func (link Link) Save() int64 {
 }
 
 func GetAll() []Link {
-	stmt, err := database.Db.Prepare("SELECT L.ID, L.title, L.address, L.UserID, U.Username from Links L inner join Users U on L.UserID = U.ID")
+	stmt, err := database.Db.Prepare("SELECT L.ID, L.Description, L.Url, L.UserID, U.Username from Links L inner join Users U on L.UserID = U.ID")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,11 +48,11 @@ func GetAll() []Link {
 	var id, username string
 	for rows.Next() {
 		var link Link
-		err := rows.Scan(&link.ID, &link.Title, &link.Address, &id, &username)
+		err := rows.Scan(&link.ID, &link.Description, &link.Url, &id, &username)
 		if err != nil {
 			log.Fatal(err)
 		}
-		link.Author = &users.User{ID: id, Username: username}
+		link.PostedBy = &users.User{ID: id, Username: username}
 		links = append(links, link)
 	}
 	if err := rows.Err(); err != nil {

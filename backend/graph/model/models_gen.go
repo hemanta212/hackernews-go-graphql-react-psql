@@ -2,11 +2,16 @@
 
 package model
 
+type AuthPayload struct {
+	Token *string `json:"token"`
+	User  *User   `json:"user"`
+}
+
 type Link struct {
-	ID      string `json:"id"`
-	Title   string `json:"title"`
-	Author  *User  `json:"author"`
-	Address string `json:"address"`
+	ID          string `json:"id"`
+	Description string `json:"description"`
+	PostedBy    *User  `json:"postedBy"`
+	URL         string `json:"url"`
 }
 
 type Login struct {
@@ -15,13 +20,14 @@ type Login struct {
 }
 
 type NewLink struct {
-	Title   string `json:"title"`
-	Address string `json:"address"`
+	Description string `json:"description"`
+	URL         string `json:"url"`
 }
 
 type NewUser struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string  `json:"username"`
+	Password string  `json:"password"`
+	Email    *string `json:"email"`
 }
 
 type RefreshTokenInput struct {
@@ -29,6 +35,7 @@ type RefreshTokenInput struct {
 }
 
 type User struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
+	ID       string  `json:"id"`
+	Username string  `json:"username"`
+	Email    *string `json:"email"`
 }

@@ -10,55 +10,63 @@ import (
 )
 
 type User struct {
-	ID       string `json:"id"`
-	Username string `json:"name"`
-	Password string `json:"password"`
+	ID       string  `json:"id"`
+	Username string  `json:"name"`
+	Password string  `json:"password"`
+	Email    *string `json:"email"`
 }
 
-func (user *User) Save() {
-	stmt, err := database.Db.Prepare("INSERT INTO Users(Username, Password) VALUES(?, ?)")
+func (user *User) Save() (int64, error) {
+	stmt, err := database.Db.Prepare("INSERT INTO Users(Username, Password, Email) VALUES(?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		return -1, err
 	}
 	hashedPassword, err := HashPassword(user.Password)
 	if err != nil {
-		log.Fatal(err)
+		return -1, err
 	}
-
-	_, err = stmt.Exec(user.Username, hashedPassword)
+	res, err := stmt.Exec(user.Username, hashedPassword, user.Email)
 	if err != nil {
-		log.Fatal(err)
+		return -1, err
 	}
-
+	id, err := res.LastInsertId()
+	if err != nil {
+		return -1, err
+	}
+	return id, nil
 }
 
-func (user *User) Authenticate() bool {
-	stmt, err := database.Db.Prepare("SELECT password FROM Users WHERE username=?")
+func (user *User) Authenticate(rawPassword string) bool {
+	return checkPasswordHash(user.Password, rawPassword)
+}
+
+func GetUserByUsername(userName string) (*User, error) {
+	stmt, err := database.Db.Prepare("SELECT password, ID, email FROM Users WHERE username=?")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
 
-	var hashedPassword string
-	err = stmt.QueryRow(user.Username).Scan(&hashedPassword)
+	var user User
+	err = stmt.QueryRow(userName).Scan(&user.Password, &user.ID, &user.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return false
+			return nil, err
 		} else {
 			log.Fatal(err)
 		}
 	}
-	return checkPasswordHash(user.Password, hashedPassword)
+	return &user, nil
 }
 
-func GetUserIdByUsername(username string) (int, error) {
+func GetUserIdByUsername(username string) (int64, error) {
 	stmt, err := database.Db.Prepare("SELECT id from Users where username=?")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
 
-	var userID int
+	var userID int64
 	err = stmt.QueryRow(username).Scan(&userID)
 	if err != nil {
 		if err != sql.ErrNoRows {
