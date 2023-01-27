@@ -3,6 +3,7 @@ package users
 import (
 	"database/sql"
 	"log"
+	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -37,18 +38,18 @@ func (user *User) Save() (int64, error) {
 }
 
 func (user *User) Authenticate(rawPassword string) bool {
-	return checkPasswordHash(user.Password, rawPassword)
+	return checkPasswordHash(rawPassword, user.Password)
 }
 
 func GetUserByUsername(userName string) (*User, error) {
-	stmt, err := database.Db.Prepare("SELECT password, ID, email FROM Users WHERE username=?")
+	stmt, err := database.Db.Prepare("SELECT ID, password, email FROM Users WHERE username=?")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
 
-	var user User
-	err = stmt.QueryRow(userName).Scan(&user.Password, &user.ID, &user.Email)
+	user := &User{Username: userName}
+	err = stmt.QueryRow(userName).Scan(&user.ID, &user.Password, &user.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, err
@@ -56,25 +57,26 @@ func GetUserByUsername(userName string) (*User, error) {
 			log.Fatal(err)
 		}
 	}
-	return &user, nil
+	return user, nil
 }
 
-func GetUserIdByUsername(username string) (int64, error) {
-	stmt, err := database.Db.Prepare("SELECT id from Users where username=?")
+func GetUserByID(id int) (*User, error) {
+	stmt, err := database.Db.Prepare("SELECT username, password, email FROM Users WHERE id=?")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
 
-	var userID int64
-	err = stmt.QueryRow(username).Scan(&userID)
+	user := &User{ID: strconv.Itoa(id)}
+	err = stmt.QueryRow(id).Scan(&user.Username, &user.Password, &user.Email)
 	if err != nil {
-		if err != sql.ErrNoRows {
-			log.Print(err)
+		if err == sql.ErrNoRows {
+			return nil, err
+		} else {
+			log.Fatal(err)
 		}
-		return 0, err
 	}
-	return userID, nil
+	return user, nil
 }
 
 func HashPassword(password string) (string, error) {

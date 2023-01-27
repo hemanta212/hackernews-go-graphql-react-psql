@@ -1,7 +1,9 @@
 package links
 
 import (
+	"database/sql"
 	"log"
+	"strconv"
 
 	database "github.com/hemanta212/hackernews-go-graphql/internal/pkg/db/mysql"
 	"github.com/hemanta212/hackernews-go-graphql/internal/users"
@@ -29,30 +31,55 @@ func (link Link) Save() int64 {
 	if err != nil {
 		log.Fatal("Error: ", err.Error())
 	}
-	log.Print("Row inserted!")
 	return id
 }
 
-func GetAll() []Link {
-	stmt, err := database.Db.Prepare("SELECT L.ID, L.Description, L.Url, L.UserID, U.Username from Links L inner join Users U on L.UserID = U.ID")
+func GetLinkByID(id int) (*Link, error) {
+	stmt, err := database.Db.Prepare(
+		"SELECT L.Description, L.Url, L.UserID, U.Username, U.Email from Links L inner join Users U on L.UserID = U.ID WHERE L.ID=?")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
+
+	link := &Link{ID: strconv.Itoa(id)}
+	user := &users.User{}
+	err = stmt.QueryRow(id).Scan(&link.Description, &link.Url, &user.ID, &user.Username, &user.Email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, err
+		} else {
+			log.Fatal(err)
+		}
+	}
+	link.PostedBy = user
+
+	return link, nil
+}
+
+func GetAll() []Link {
+	stmt, err := database.Db.Prepare(
+		"SELECT L.ID, L.Description, L.Url, L.UserID, U.Username, U.Email from Links L inner join Users U on L.UserID = U.ID")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+
 	rows, err := stmt.Query()
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
+
 	var links []Link
-	var id, username string
 	for rows.Next() {
 		var link Link
-		err := rows.Scan(&link.ID, &link.Description, &link.Url, &id, &username)
+		user := &users.User{}
+		err := rows.Scan(&link.ID, &link.Description, &link.Url, &user.ID, &user.Username, &user.Email)
 		if err != nil {
 			log.Fatal(err)
 		}
-		link.PostedBy = &users.User{ID: id, Username: username}
+		link.PostedBy = user
 		links = append(links, link)
 	}
 	if err := rows.Err(); err != nil {

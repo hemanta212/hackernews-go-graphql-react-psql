@@ -2,17 +2,31 @@
 #
 # https://gqlgen.com/getting-started/
 
+type Feed {
+     id: ID!
+     links: [Link!]!
+     count: Int!
+}
+
 type Link {
     id: ID!
     description: String!
     postedBy: User!
     url: String!
+    createdAt: DateTime!
+    votes: [Vote!]!
 }
 
-type User{
+type User {
      id: ID!
      username: String!
      email: String
+}
+
+type Vote {
+     id: ID!
+     link: Link!
+     user: User!
 }
 
 type AuthPayload {
@@ -20,33 +34,37 @@ type AuthPayload {
      user: User
 }
 
-type Query{
+type Query {
      links: [Link!]!
+     feed: [Link!]!
 }
 
-input RefreshTokenInput{
+input RefreshTokenInput {
       token: String!
 }
 
-input NewUser{
+input NewUser {
       username: String!
       password: String!
       email: String
 }
 
-input NewLink{
+input NewLink {
       description: String!
       url: String!
 }
 
-input Login{
+input Login {
       username: String!
       password: String!
 }
 
 type Mutation {
-     createLink(input: NewLink!): Link!
-     createUser(input: NewUser!): AuthPayload
+     post(input: NewLink!): Link!
+     signup(input: NewUser!): AuthPayload
      login(input: Login!): AuthPayload
+     vote(linkID: ID!): Vote
      refreshToken(input: RefreshTokenInput!): String!
 }
+
+scalar DateTime

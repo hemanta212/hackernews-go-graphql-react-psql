@@ -7,11 +7,19 @@ type AuthPayload struct {
 	User  *User   `json:"user"`
 }
 
+type Feed struct {
+	ID    string  `json:"id"`
+	Links []*Link `json:"links"`
+	Count int     `json:"count"`
+}
+
 type Link struct {
-	ID          string `json:"id"`
-	Description string `json:"description"`
-	PostedBy    *User  `json:"postedBy"`
-	URL         string `json:"url"`
+	ID          string  `json:"id"`
+	Description string  `json:"description"`
+	PostedBy    *User   `json:"postedBy"`
+	URL         string  `json:"url"`
+	CreatedAt   string  `json:"createdAt"`
+	Votes       []*Vote `json:"votes"`
 }
 
 type Login struct {
@@ -38,4 +46,10 @@ type User struct {
 	ID       string  `json:"id"`
 	Username string  `json:"username"`
 	Email    *string `json:"email"`
+}
+
+type Vote struct {
+	ID   string `json:"id"`
+	Link *Link  `json:"link"`
+	User *User  `json:"user"`
 }

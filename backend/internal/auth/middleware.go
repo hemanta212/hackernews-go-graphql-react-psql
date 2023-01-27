@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/hemanta212/hackernews-go-graphql/internal/users"
 	"github.com/hemanta212/hackernews-go-graphql/pkg/jwt"
@@ -31,15 +30,13 @@ func Middleware() func(http.Handler) http.Handler {
 				return
 			}
 			//create user and check if user exists
-			user := users.User{Username: username}
-			id, err := users.GetUserIdByUsername(username)
+			user, err := users.GetUserByUsername(username)
 			if err != nil {
 				next.ServeHTTP(w, r)
 				return
 			}
-			user.ID = strconv.FormatInt(id, 10)
 			// put it in context
-			ctx := context.WithValue(r.Context(), userCtxKey, &user)
+			ctx := context.WithValue(r.Context(), userCtxKey, user)
 			// and call the nextwith our new context
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)

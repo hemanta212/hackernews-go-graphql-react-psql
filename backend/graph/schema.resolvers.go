@@ -13,15 +13,17 @@ import (
 	"github.com/hemanta212/hackernews-go-graphql/internal/auth"
 	"github.com/hemanta212/hackernews-go-graphql/internal/links"
 	"github.com/hemanta212/hackernews-go-graphql/internal/users"
+	"github.com/hemanta212/hackernews-go-graphql/internal/votes"
 	"github.com/hemanta212/hackernews-go-graphql/pkg/jwt"
 )
 
-// CreateLink is the resolver for the createLink field.
-func (r *mutationResolver) CreateLink(ctx context.Context, input model.NewLink) (*model.Link, error) {
+// Post is the resolver for the post field.
+func (r *mutationResolver) Post(ctx context.Context, input model.NewLink) (*model.Link, error) {
 	user := auth.ForContext(ctx)
 	if user == nil {
 		return &model.Link{}, fmt.Errorf("Acces denied")
 	}
+
 	link := links.Link{
 		Description: input.Description,
 		Url:         input.URL,
@@ -33,12 +35,12 @@ func (r *mutationResolver) CreateLink(ctx context.Context, input model.NewLink) 
 		ID:          strconv.FormatInt(linkID, 10),
 		Description: link.Description,
 		URL:         link.Url,
-		PostedBy:    &model.User{ID: user.ID, Username: user.Username},
+		PostedBy:    &model.User{ID: user.ID, Username: user.Username, Email: user.Email},
 	}, nil
 }
 
-// CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.AuthPayload, error) {
+// Signup is the resolver for the signup field.
+func (r *mutationResolver) Signup(ctx context.Context, input model.NewUser) (*model.AuthPayload, error) {
 	var payload model.AuthPayload
 	user := users.User{
 		Username: input.Username,
@@ -82,6 +84,33 @@ func (r *mutationResolver) Login(ctx context.Context, input model.Login) (*model
 	}, nil
 }
 
+// Vote is the resolver for the vote field.
+func (r *mutationResolver) Vote(ctx context.Context, linkID string) (*model.Vote, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return nil, fmt.Errorf("Acces denied")
+	}
+
+	linkId, err := strconv.Atoi(linkID)
+	if err != nil {
+		return nil, err
+	}
+	link, err := links.GetLinkByID(linkId)
+
+	vote := &votes.Vote{
+		Link:    link,
+		VotedBy: user,
+	}
+	voteID := vote.Save()
+
+	return &model.Vote{
+		ID: strconv.FormatInt(voteID, 10),
+		Link: &model.Link{ID: vote.Link.ID, Description: vote.Link.Description, URL: vote.Link.Url,
+			PostedBy: &model.User{ID: user.ID, Username: user.Username, Email: user.Email}},
+		User: &model.User{ID: vote.VotedBy.ID, Username: vote.VotedBy.Username, Email: vote.VotedBy.Email},
+	}, nil
+}
+
 // RefreshToken is the resolver for the refreshToken field.
 func (r *mutationResolver) RefreshToken(ctx context.Context, input model.RefreshTokenInput) (string, error) {
 	username, err := jwt.ParseToken(input.Token)
@@ -104,6 +133,7 @@ func (r *queryResolver) Links(ctx context.Context) ([]*model.Link, error) {
 		graphqlUser := &model.User{
 			ID:       link.PostedBy.ID,
 			Username: link.PostedBy.Username,
+			Email:    link.PostedBy.Email,
 		}
 		resultLinks = append(
 			resultLinks,
@@ -115,6 +145,11 @@ func (r *queryResolver) Links(ctx context.Context) ([]*model.Link, error) {
 			})
 	}
 	return resultLinks, nil
+}
+
+// Feed is the resolver for the feed field.
+func (r *queryResolver) Feed(ctx context.Context) ([]*model.Link, error) {
+	panic(fmt.Errorf("not implemented: Feed - feed"))
 }
 
 // Mutation returns MutationResolver implementation.
