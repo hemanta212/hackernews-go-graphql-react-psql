@@ -18,26 +18,28 @@ const Header = () => {
         <Link to="/search" className="ml1 no-underline black">
           search
         </Link>
-        <div className="flex">
-          <div classname="ml1">|</div>
-          <Link to="/create" className="ml1 no-underline black">
-            submit
-          </Link>
-        </div>
+        {authToken && (
+          <div className="flex">
+            <div className="ml1">|</div>
+            <Link to="/create" className="ml1 no-underline black">
+              submit
+            </Link>
+          </div>
+        )}
       </div>
-      <div className="flex flex-fixed">
+      <div className="flex tr-1 flex-fixed">
         {authToken ? (
           <div
-            className="ml1 pointer black"
+            className="ml2 pointer black"
             onClick={() => {
               localStorage.removeItem(AUTH_TOKEN);
               navigate("/");
             }}
           >
-            logout
+            | logout
           </div>
         ) : (
-          <Link to="/login" className="ml1 no-underline black">
+          <Link to="/login" className="ml2 no-underline black">
             login
           </Link>
         )}

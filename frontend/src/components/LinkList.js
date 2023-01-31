@@ -11,7 +11,7 @@ const FEED_QUERY = gql`
         description
         url
         postedBy {
-          name
+          username
         }
         votes {
           id

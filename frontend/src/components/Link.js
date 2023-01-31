@@ -1,6 +1,5 @@
 import React from "react";
 import { AUTH_TOKEN } from "../constants";
-import { timeDifferenceForDate } from "../utils";
 
 const Link = (props) => {
   const { link } = props;
@@ -23,13 +22,12 @@ const Link = (props) => {
       </div>
       <div className="ml1">
         <div>
-          {link.descripton} ({link.url})
+          {link.description} ({link.url})
         </div>
         {
           <div className="f6 1h-copy gray">
             {link.votes.length} votes | by{" "}
-            {link.postedBy ? link.postedBy.name : "Anonymous"}{" "}
-            {timeDifferenceForDate(link.createdAt)}
+            {link.postedBy ? link.postedBy.username : "Anonymous"}{" "}
           </div>
         }
       </div>
