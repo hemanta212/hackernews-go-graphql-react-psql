@@ -14,15 +14,16 @@ type Link struct {
 	Description string
 	Url         string
 	PostedBy    *users.User
+	CreatedAt   string
 }
 
-func (link Link) Save() int64 {
-	stmt, err := database.Db.Prepare("INSERT INTO Links(Description, Url, UserID) VALUES(?, ?, ?)")
+func (link *Link) Save() int64 {
+	stmt, err := database.Db.Prepare("INSERT INTO Links(Description, Url, UserID, CreatedAt) VALUES(?, ?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	res, err := stmt.Exec(link.Description, link.Url, link.PostedBy.ID)
+	res, err := stmt.Exec(link.Description, link.Url, link.PostedBy.ID, link.CreatedAt)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,7 +37,7 @@ func (link Link) Save() int64 {
 
 func GetLinkByID(id int) (*Link, error) {
 	stmt, err := database.Db.Prepare(
-		"SELECT L.Description, L.Url, L.UserID, U.Username, U.Email from Links L inner join Users U on L.UserID = U.ID WHERE L.ID=?")
+		"SELECT L.Description, L.Url, L.CreatedAt, L.UserID, U.Username, U.Email from Links L inner join Users U on L.UserID = U.ID WHERE L.ID=?")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,7 +45,7 @@ func GetLinkByID(id int) (*Link, error) {
 
 	link := &Link{ID: strconv.Itoa(id)}
 	user := &users.User{}
-	err = stmt.QueryRow(id).Scan(&link.Description, &link.Url, &user.ID, &user.Username, &user.Email)
+	err = stmt.QueryRow(id).Scan(&link.Description, &link.Url, &link.CreatedAt, &user.ID, &user.Username, &user.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, err
@@ -57,9 +58,9 @@ func GetLinkByID(id int) (*Link, error) {
 	return link, nil
 }
 
-func GetAll() []Link {
+func GetAll() []*Link {
 	stmt, err := database.Db.Prepare(
-		"SELECT L.ID, L.Description, L.Url, L.UserID, U.Username, U.Email from Links L inner join Users U on L.UserID = U.ID")
+		"SELECT L.ID, L.Description, L.Url, L.UserID, L.CreatedAt, U.Username, U.Email from Links L inner join Users U on L.UserID = U.ID")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -71,11 +72,10 @@ func GetAll() []Link {
 	}
 	defer rows.Close()
 
-	var links []Link
+	var links []*Link
 	for rows.Next() {
-		var link Link
-		user := &users.User{}
-		err := rows.Scan(&link.ID, &link.Description, &link.Url, &user.ID, &user.Username, &user.Email)
+		link, user := &Link{}, &users.User{}
+		err := rows.Scan(&link.ID, &link.Description, &link.Url, &user.ID, &link.CreatedAt, &user.Username, &user.Email)
 		if err != nil {
 			log.Fatal(err)
 		}

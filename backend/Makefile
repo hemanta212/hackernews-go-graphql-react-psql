@@ -64,9 +64,11 @@ gqlgen-init:
 	go run github.com/99designs/gqlgen@latest init
 
 
-build:
+build:server.go
 	@ go build -o build/ .
 
+dev:server.go
+	@ go run ./server.go
 
 run: build
 	@ ./build/hackernews-go-graphql

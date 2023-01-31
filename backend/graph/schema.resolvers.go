@@ -7,7 +7,9 @@ package graph
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
+	"time"
 
 	"github.com/hemanta212/hackernews-go-graphql/graph/model"
 	"github.com/hemanta212/hackernews-go-graphql/internal/auth"
@@ -24,25 +26,22 @@ func (r *mutationResolver) Post(ctx context.Context, input model.NewLink) (*mode
 		return &model.Link{}, fmt.Errorf("Acces denied")
 	}
 
-	link := links.Link{
+	link := &links.Link{
 		Description: input.Description,
 		Url:         input.URL,
 		PostedBy:    user,
+		CreatedAt:   time.Now().UTC().Format("2006-01-02 15:04:05"),
 	}
 	linkID := link.Save()
+	link.ID = strconv.FormatInt(linkID, 10)
 
-	return &model.Link{
-		ID:          strconv.FormatInt(linkID, 10),
-		Description: link.Description,
-		URL:         link.Url,
-		PostedBy:    &model.User{ID: user.ID, Username: user.Username, Email: user.Email},
-	}, nil
+	return model.FromLink(link), nil
 }
 
 // Signup is the resolver for the signup field.
 func (r *mutationResolver) Signup(ctx context.Context, input model.NewUser) (*model.AuthPayload, error) {
 	var payload model.AuthPayload
-	user := users.User{
+	user := &users.User{
 		Username: input.Username,
 		Password: input.Password,
 		Email:    input.Email,
@@ -52,6 +51,7 @@ func (r *mutationResolver) Signup(ctx context.Context, input model.NewUser) (*mo
 	if err != nil {
 		return &payload, err
 	}
+	user.ID = strconv.FormatInt(id, 10)
 
 	token, err := jwt.GenerateToken(user.Username)
 	if err != nil {
@@ -60,7 +60,7 @@ func (r *mutationResolver) Signup(ctx context.Context, input model.NewUser) (*mo
 
 	return &model.AuthPayload{
 		Token: &token,
-		User:  &model.User{ID: strconv.FormatInt(id, 10), Username: user.Username, Email: user.Email},
+		User:  model.FromUser(user),
 	}, nil
 }
 
@@ -80,7 +80,7 @@ func (r *mutationResolver) Login(ctx context.Context, input model.Login) (*model
 	}
 	return &model.AuthPayload{
 		Token: &token,
-		User:  &model.User{ID: user.ID, Username: user.Username, Email: user.Email},
+		User:  model.FromUser(user),
 	}, nil
 }
 
@@ -102,13 +102,9 @@ func (r *mutationResolver) Vote(ctx context.Context, linkID string) (*model.Vote
 		VotedBy: user,
 	}
 	voteID := vote.Save()
+	vote.ID = strconv.FormatInt(voteID, 10)
 
-	return &model.Vote{
-		ID: strconv.FormatInt(voteID, 10),
-		Link: &model.Link{ID: vote.Link.ID, Description: vote.Link.Description, URL: vote.Link.Url,
-			PostedBy: &model.User{ID: user.ID, Username: user.Username, Email: user.Email}},
-		User: &model.User{ID: vote.VotedBy.ID, Username: vote.VotedBy.Username, Email: vote.VotedBy.Email},
-	}, nil
+	return model.FromVote(vote), nil
 }
 
 // RefreshToken is the resolver for the refreshToken field.
@@ -124,32 +120,27 @@ func (r *mutationResolver) RefreshToken(ctx context.Context, input model.Refresh
 	return token, nil
 }
 
-// Links is the resolver for the links field.
-func (r *queryResolver) Links(ctx context.Context) ([]*model.Link, error) {
-	var resultLinks []*model.Link
-	var dbLinks []links.Link
-	dbLinks = links.GetAll()
-	for _, link := range dbLinks {
-		graphqlUser := &model.User{
-			ID:       link.PostedBy.ID,
-			Username: link.PostedBy.Username,
-			Email:    link.PostedBy.Email,
-		}
-		resultLinks = append(
-			resultLinks,
-			&model.Link{
-				ID:          link.ID,
-				Description: link.Description,
-				URL:         link.Url,
-				PostedBy:    graphqlUser,
-			})
-	}
-	return resultLinks, nil
-}
-
 // Feed is the resolver for the feed field.
-func (r *queryResolver) Feed(ctx context.Context) ([]*model.Link, error) {
-	panic(fmt.Errorf("not implemented: Feed - feed"))
+func (r *queryResolver) Feed(ctx context.Context) (*model.Feed, error) {
+	var dbLinks []*links.Link
+	dbLinks = links.GetAll()
+	// perform conversion to model.Link
+	var resultLinks []*model.Link
+	for _, link := range dbLinks {
+		custom_votes, err := votes.GetVotesByLinkId(link.ID)
+		if err != nil {
+			log.Fatal(err)
+		}
+		model_votes := []*model.Vote{}
+		for _, vote := range custom_votes {
+			model_votes = append(model_votes, model.FromVote(vote))
+		}
+		modelLink := model.FromLink(link)
+		modelLink.Votes = model_votes
+
+		resultLinks = append(resultLinks, modelLink)
+	}
+	return &model.Feed{ID: "1", Links: resultLinks, Count: len(resultLinks)}, nil
 }
 
 // Mutation returns MutationResolver implementation.
