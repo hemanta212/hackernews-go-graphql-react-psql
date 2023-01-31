@@ -1,5 +1,6 @@
 import React from "react";
 import { AUTH_TOKEN } from "../constants";
+import { timeDifferenceForDate } from "../utils";
 
 const Link = (props) => {
   const { link } = props;
@@ -28,6 +29,7 @@ const Link = (props) => {
           <div className="f6 1h-copy gray">
             {link.votes.length} votes | by{" "}
             {link.postedBy ? link.postedBy.username : "Anonymous"}{" "}
+            {timeDifferenceForDate(link.createdAt)}
           </div>
         }
       </div>
