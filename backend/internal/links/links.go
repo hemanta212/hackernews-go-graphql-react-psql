@@ -17,6 +17,10 @@ type Link struct {
 	CreatedAt   string
 }
 
+type LinkMod struct {
+	Filter string
+}
+
 func (link *Link) Save() int64 {
 	stmt, err := database.Db.Prepare("INSERT INTO Links(Description, Url, UserID, CreatedAt) VALUES(?, ?, ?, ?)")
 	if err != nil {
@@ -58,15 +62,21 @@ func GetLinkByID(id int) (*Link, error) {
 	return link, nil
 }
 
-func GetAll() []*Link {
-	stmt, err := database.Db.Prepare(
-		"SELECT L.ID, L.Description, L.Url, L.UserID, L.CreatedAt, U.Username, U.Email from Links L inner join Users U on L.UserID = U.ID")
+func GetAll(mods *LinkMod) []*Link {
+	stmt, err := database.Db.Prepare(`SELECT
+                       L.ID, L.Description, L.Url, L.UserID, L.CreatedAt,
+                       U.Username, U.Email
+                       FROM Links L
+                       INNER JOIN Users U ON L.UserID = U.ID
+                       WHERE L.Description LIKE ?
+                       OR L.Url LIKE ?
+                       OR L.CreatedAt LIKE ?`)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query()
+	rows, err := stmt.Query(mods.Filter, mods.Filter, mods.Filter)
 	if err != nil {
 		log.Fatal(err)
 	}

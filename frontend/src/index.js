@@ -13,7 +13,7 @@ import {
 } from "@apollo/client";
 
 const httpLink = createHttpLink({
-  uri: "http://vps.osac.org.np:8080/query",
+  uri: "http://localhost:8080/query",
 });
 
 const authLink = setContext((_, { headers }) => {

@@ -121,9 +121,16 @@ func (r *mutationResolver) RefreshToken(ctx context.Context, input model.Refresh
 }
 
 // Feed is the resolver for the feed field.
-func (r *queryResolver) Feed(ctx context.Context) (*model.Feed, error) {
+func (r *queryResolver) Feed(ctx context.Context, filter *string) (*model.Feed, error) {
+	linkMod := &links.LinkMod{}
+	if filter != nil {
+		linkMod.Filter = fmt.Sprintf("%%%s%%", *filter)
+	} else {
+		linkMod.Filter = "%%"
+	}
+
 	var dbLinks []*links.Link
-	dbLinks = links.GetAll()
+	dbLinks = links.GetAll(linkMod)
 	// perform conversion to model.Link
 	var resultLinks []*model.Link
 	for _, link := range dbLinks {

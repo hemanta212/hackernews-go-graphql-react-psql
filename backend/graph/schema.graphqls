@@ -35,7 +35,7 @@ type AuthPayload {
 }
 
 type Query {
-     feed: Feed!
+     feed(filter: String): Feed!
 }
 
 input RefreshTokenInput {
