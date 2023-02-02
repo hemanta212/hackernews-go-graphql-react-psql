@@ -4,16 +4,20 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
+	"github.com/gorilla/websocket"
 
 	"github.com/hemanta212/hackernews-go-graphql/graph"
+	"github.com/hemanta212/hackernews-go-graphql/graph/model"
 	"github.com/hemanta212/hackernews-go-graphql/internal/auth"
 	database "github.com/hemanta212/hackernews-go-graphql/internal/pkg/db/mysql"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 )
 
@@ -39,8 +43,24 @@ func main() {
 	defer database.CloseDB()
 	database.Migrate()
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
+		LinkObservers: map[string]chan *model.Link{},
+		VoteObservers: map[string]chan *model.Vote{},
+	}}))
+
+	srv.AddTransport(transport.POST{})
+	// websockets for subcriptions
+	srv.AddTransport(transport.Websocket{
+		KeepAlivePingInterval: 10 * time.Second,
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		},
+	})
+
 	srv.Use(extension.Introspection{})
+
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 

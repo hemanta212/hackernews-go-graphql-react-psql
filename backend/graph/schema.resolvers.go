@@ -15,6 +15,7 @@ import (
 	"github.com/hemanta212/hackernews-go-graphql/internal/auth"
 	"github.com/hemanta212/hackernews-go-graphql/internal/links"
 	"github.com/hemanta212/hackernews-go-graphql/internal/users"
+	"github.com/hemanta212/hackernews-go-graphql/internal/utils"
 	"github.com/hemanta212/hackernews-go-graphql/internal/votes"
 	"github.com/hemanta212/hackernews-go-graphql/pkg/jwt"
 )
@@ -34,6 +35,16 @@ func (r *mutationResolver) Post(ctx context.Context, input model.NewLink) (*mode
 	}
 	linkID := link.Save()
 	link.ID = strconv.FormatInt(linkID, 10)
+
+	mLink := model.FromLink(link)
+	r.CreatedLink = mLink
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for k, observer := range r.LinkObservers {
+		fmt.Println("Sending link to ", k)
+		fmt.Printf("Object %v\n", r.CreatedLink)
+		observer <- r.CreatedLink
+	}
 
 	return model.FromLink(link), nil
 }
@@ -104,7 +115,16 @@ func (r *mutationResolver) Vote(ctx context.Context, linkID string) (*model.Vote
 	voteID := vote.Save()
 	vote.ID = strconv.FormatInt(voteID, 10)
 
-	return model.FromVote(vote), nil
+	mVote := model.FromVote(vote)
+	r.CreatedVote = mVote
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for k, observer := range r.VoteObservers {
+		fmt.Println("Sending vote to ", k)
+		observer <- r.CreatedVote
+	}
+
+	return mVote, nil
 }
 
 // RefreshToken is the resolver for the refreshToken field.
@@ -150,11 +170,67 @@ func (r *queryResolver) Feed(ctx context.Context, filter *string) (*model.Feed, 
 	return &model.Feed{ID: "1", Links: resultLinks, Count: len(resultLinks)}, nil
 }
 
+// NewLink is the resolver for the newLink field.
+func (r *subscriptionResolver) NewLink(ctx context.Context) (<-chan *model.Link, error) {
+	if r.LinkObservers == nil {
+		fmt.Println("Nill observers map creating")
+		r.LinkObservers = make(map[string]chan *model.Link)
+	}
+	// create id and channel for each active subscription, we'll push changes into this channel
+	// when a new subscription is created by the client, this resolver fires first
+	id := utils.RandString(8)
+	newLink := make(chan *model.Link, 1)
+	fmt.Println("Subbed by", id)
+
+	// start a goroutine to allow or cleaning up subscriptions that are disconnected.
+	// this go routine will only get past Done() when a client terminates the subscription.
+	// Allows us to only remove the ref from list of chat observers since its no longer needed
+	go func() {
+		<-ctx.Done()
+		fmt.Println("Conn closed removing ", id)
+		r.mu.Lock()
+		delete(r.LinkObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+	// keep a reference of the channel so that we can push changes into it when new messages are posted.
+	r.LinkObservers[id] = newLink
+	r.mu.Unlock()
+	return newLink, nil
+}
+
+// NewVote is the resolver for the newVote field.
+func (r *subscriptionResolver) NewVote(ctx context.Context) (<-chan *model.Vote, error) {
+	if r.VoteObservers == nil {
+		r.VoteObservers = make(map[string]chan *model.Vote)
+	}
+	fmt.Println("sub entered")
+	id := utils.RandString(8)
+	fmt.Println(id)
+	newVote := make(chan *model.Vote, 1)
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.VoteObservers, id)
+		r.mu.Unlock()
+	}()
+
+	r.mu.Lock()
+	r.VoteObservers[id] = newVote
+	fmt.Println("Added channel to observers")
+	r.mu.Unlock()
+	return newVote, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// Subscription returns SubscriptionResolver implementation.
+func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }

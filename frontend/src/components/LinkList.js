@@ -21,8 +21,56 @@ export const FEED_QUERY = gql`
   }
 `;
 
+export const NEW_LINKS_SUBSCRIPTION = gql`
+  subscription {
+    newLink {
+      id  
+      url 
+      description
+      createdAt
+      postedBy {
+        id
+        username
+      }
+      votes {
+        id
+        user {
+          id
+        }
+      }
+    }
+  }
+`;
+
+
+
 const LinkList = () => {
-  const { data } = useQuery(FEED_QUERY);
+  const { data, loading, error, subscribeToMore } = useQuery(FEED_QUERY);
+  subscribeToMore({
+      document: NEW_LINKS_SUBSCRIPTION,
+      // updateQuery is a function that takes the previous state of the query
+      // and the subscription data and returns the new state of the query
+      // these args are passed in automatically by Apollo
+      updateQuery: (prev, { subscriptionData }) => {
+        if (!subscriptionData.data) return prev;
+        const newLink = subscriptionData.data.newLink;
+        // find is a method on arrays that returns the first item that matches
+        // the condition in the callback
+        console.log("curr id prev links ids: ", newLink.id, prev.feed.links.map(link => link.id))
+        const exists = prev.feed.links.find(
+          ({id}) => id === newLink.id
+        );
+        if (exists) return prev;
+
+        return Object.assign({}, prev, {
+          feed: {
+            links: [newLink, ...prev.feed.links],
+            count: prev.feed.links.length + 1,
+            __typename: prev.feed.__typename
+        }
+      });
+      }
+  });
   return (
     <div>
       {data && (

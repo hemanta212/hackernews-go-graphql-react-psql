@@ -66,4 +66,9 @@ type Mutation {
      refreshToken(input: RefreshTokenInput!): String!
 }
 
+type Subscription{
+     newLink: Link!
+     newVote: Vote!
+}
+
 scalar DateTime
