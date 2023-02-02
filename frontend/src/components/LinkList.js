@@ -42,10 +42,38 @@ export const NEW_LINKS_SUBSCRIPTION = gql`
   }
 `;
 
-
+export const NEW_VOTES_SUBSCRIPTION = gql`
+  subscription {
+    newVote {
+      id
+      link {
+        id
+        url
+        description
+        createdAt
+        postedBy {
+          id
+          username
+        }
+        votes {
+          id
+          user {
+            id
+          }
+        }
+      }
+      user {  
+        id
+      } 
+    }
+  }
+`;
 
 const LinkList = () => {
   const { data, loading, error, subscribeToMore } = useQuery(FEED_QUERY);
+  subscribeToMore({
+      document: NEW_VOTES_SUBSCRIPTION,
+  });
   subscribeToMore({
       document: NEW_LINKS_SUBSCRIPTION,
       // updateQuery is a function that takes the previous state of the query
