@@ -2,6 +2,12 @@
 
 package model
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
 type AuthPayload struct {
 	Token *string `json:"token"`
 	User  *User   `json:"user"`
@@ -20,6 +26,12 @@ type Link struct {
 	URL         string  `json:"url"`
 	CreatedAt   string  `json:"createdAt"`
 	Votes       []*Vote `json:"votes"`
+}
+
+type LinkOrderByInput struct {
+	Description *Sort `json:"description"`
+	URL         *Sort `json:"url"`
+	CreatedAt   *Sort `json:"createdAt"`
 }
 
 type Login struct {
@@ -52,4 +64,45 @@ type Vote struct {
 	ID   string `json:"id"`
 	Link *Link  `json:"link"`
 	User *User  `json:"user"`
+}
+
+type Sort string
+
+const (
+	SortAsc  Sort = "asc"
+	SortDesc Sort = "desc"
+)
+
+var AllSort = []Sort{
+	SortAsc,
+	SortDesc,
+}
+
+func (e Sort) IsValid() bool {
+	switch e {
+	case SortAsc, SortDesc:
+		return true
+	}
+	return false
+}
+
+func (e Sort) String() string {
+	return string(e)
+}
+
+func (e *Sort) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Sort(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Sort", str)
+	}
+	return nil
+}
+
+func (e Sort) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

@@ -18,8 +18,24 @@ type Link struct {
 }
 
 type LinkMod struct {
-	Filter string
+	Filter  string
+	Limit   int
+	Offset  int
+	OrderBy *LinkOrderByInput
 }
+
+type LinkOrderByInput struct {
+	Description Sort `json:"description"`
+	URL         Sort `json:"url"`
+	CreatedAt   Sort `json:"createdAt"`
+}
+
+type Sort string
+
+const (
+	SortAsc  Sort = "asc"
+	SortDesc Sort = "desc"
+)
 
 func (link *Link) Save() int64 {
 	stmt, err := database.Db.Prepare("INSERT INTO Links(Description, Url, UserID, CreatedAt) VALUES(?, ?, ?, ?)")
@@ -70,13 +86,15 @@ func GetAll(mods *LinkMod) []*Link {
                        INNER JOIN Users U ON L.UserID = U.ID
                        WHERE L.Description LIKE ?
                        OR L.Url LIKE ?
-                       OR L.CreatedAt LIKE ?`)
+                       OR L.CreatedAt LIKE ?
+                       LIMIT ?
+                       OFFSET ?`)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(mods.Filter, mods.Filter, mods.Filter)
+	rows, err := stmt.Query(mods.Filter, mods.Filter, mods.Filter, mods.Limit, mods.Offset)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,6 +1,6 @@
 import React from "react";
 import { gql, useMutation } from "@apollo/client";
-import { AUTH_TOKEN } from "../constants";
+import { AUTH_TOKEN, LINKS_PER_PAGE} from "../constants";
 import { timeDifferenceForDate } from "../utils";
 import { FEED_QUERY } from "./LinkList";
 
@@ -27,19 +27,28 @@ const VOTE_MUTATION = gql`
 const Link = (props) => {
   const { link } = props;
   const authToken = localStorage.getItem(AUTH_TOKEN);
-  const [upVote] = useMutation(VOTE_MUTATION, {
+  
+  const limit = LINKS_PER_PAGE;
+  const offset = 0;
+
+  const [vote] = useMutation(VOTE_MUTATION, {
     variables: {
-      linkID: link.id,
+      linkID: link.id
     },
     update: (cache, { data: { vote } }) => {
-      const { feed } = cache.readQuery({ query: FEED_QUERY });
-      console.log(feed);
+      const { feed } = cache.readQuery({
+        query: FEED_QUERY,
+        variables: {
+          limit,
+          offset,
+        }
+      });
+
       const updatedLinks = feed.links.map((feedLink) => {
-        console.log(feedLink.votes.length);
         if (feedLink.id === link.id) {
           return {
             ...feedLink,
-            votes: [...feedLink.votes, vote],
+            votes: [...feedLink.votes, vote]
           };
         }
         return feedLink;
@@ -49,11 +58,15 @@ const Link = (props) => {
         query: FEED_QUERY,
         data: {
           feed: {
-            links: updatedLinks,
-          },
+            links: updatedLinks
+          }
         },
+        variables: {
+          limit,
+          offset,
+        }
       });
-    },
+    }
   });
 
   return (
@@ -64,7 +77,7 @@ const Link = (props) => {
           <div
             className="ml1 gray f11"
             style={{ cursor: "pointer" }}
-            onClick={upVote}
+            onClick={vote}
           >
             ▲
           </div>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useMutation, gql } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import { FEED_QUERY } from "./LinkList";
+import { AUTH_TOKEN, LINKS_PER_PAGE } from "../constants";
 
 const CREATE_LINK_MUTATION = gql`
   mutation PostMutation($input: NewLink!) {
@@ -29,6 +30,8 @@ const CreateLink = () => {
     },
     onCompleted: () => navigate("/"),
     update: (cache, { data: { post } }) => {
+      const limit = LINKS_PER_PAGE;
+      const offset = 0;
       const data = cache.readQuery({ query: FEED_QUERY });
       cache.writeQuery({
         query: FEED_QUERY,
@@ -37,6 +40,10 @@ const CreateLink = () => {
             links: [post, ...data.feed.links],
           },
         },
+        variables: {
+          limit,
+          offset,
+        }
       });
     },
   });

@@ -75,7 +75,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Feed func(childComplexity int, filter *string) int
+		Feed func(childComplexity int, filter *string, offset *int, limit *int, orderBy *model.LinkOrderByInput) int
 	}
 
 	Subscription struct {
@@ -104,7 +104,7 @@ type MutationResolver interface {
 	RefreshToken(ctx context.Context, input model.RefreshTokenInput) (string, error)
 }
 type QueryResolver interface {
-	Feed(ctx context.Context, filter *string) (*model.Feed, error)
+	Feed(ctx context.Context, filter *string, offset *int, limit *int, orderBy *model.LinkOrderByInput) (*model.Feed, error)
 }
 type SubscriptionResolver interface {
 	NewLink(ctx context.Context) (<-chan *model.Link, error)
@@ -273,7 +273,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Feed(childComplexity, args["filter"].(*string)), true
+		return e.complexity.Query.Feed(childComplexity, args["filter"].(*string), args["offset"].(*int), args["limit"].(*int), args["orderBy"].(*model.LinkOrderByInput)), true
 
 	case "Subscription.newLink":
 		if e.complexity.Subscription.NewLink == nil {
@@ -339,6 +339,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputLinkOrderByInput,
 		ec.unmarshalInputLogin,
 		ec.unmarshalInputNewLink,
 		ec.unmarshalInputNewUser,
@@ -541,6 +542,33 @@ func (ec *executionContext) field_Query_feed_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["filter"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg2
+	var arg3 *model.LinkOrderByInput
+	if tmp, ok := rawArgs["orderBy"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
+		arg3, err = ec.unmarshalOLinkOrderByInput2ᚖgithubᚗcomᚋhemanta212ᚋhackernewsᚑgoᚑgraphqlᚋgraphᚋmodelᚐLinkOrderByInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orderBy"] = arg3
 	return args, nil
 }
 
@@ -1407,7 +1435,7 @@ func (ec *executionContext) _Query_feed(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Feed(rctx, fc.Args["filter"].(*string))
+		return ec.resolvers.Query().Feed(rctx, fc.Args["filter"].(*string), fc.Args["offset"].(*int), fc.Args["limit"].(*int), fc.Args["orderBy"].(*model.LinkOrderByInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3774,6 +3802,50 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputLinkOrderByInput(ctx context.Context, obj interface{}) (model.LinkOrderByInput, error) {
+	var it model.LinkOrderByInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"description", "url", "createdAt"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalOSort2ᚖgithubᚗcomᚋhemanta212ᚋhackernewsᚑgoᚑgraphqlᚋgraphᚋmodelᚐSort(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "url":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
+			it.URL, err = ec.unmarshalOSort2ᚖgithubᚗcomᚋhemanta212ᚋhackernewsᚑgoᚑgraphqlᚋgraphᚋmodelᚐSort(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createdAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			it.CreatedAt, err = ec.unmarshalOSort2ᚖgithubᚗcomᚋhemanta212ᚋhackernewsᚑgoᚑgraphqlᚋgraphᚋmodelᚐSort(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputLogin(ctx context.Context, obj interface{}) (model.Login, error) {
 	var it model.Login
 	asMap := map[string]interface{}{}
@@ -5114,6 +5186,46 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOLinkOrderByInput2ᚖgithubᚗcomᚋhemanta212ᚋhackernewsᚑgoᚑgraphqlᚋgraphᚋmodelᚐLinkOrderByInput(ctx context.Context, v interface{}) (*model.LinkOrderByInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputLinkOrderByInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOSort2ᚖgithubᚗcomᚋhemanta212ᚋhackernewsᚑgoᚑgraphqlᚋgraphᚋmodelᚐSort(ctx context.Context, v interface{}) (*model.Sort, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.Sort)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOSort2ᚖgithubᚗcomᚋhemanta212ᚋhackernewsᚑgoᚑgraphqlᚋgraphᚋmodelᚐSort(ctx context.Context, sel ast.SelectionSet, v *model.Sort) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

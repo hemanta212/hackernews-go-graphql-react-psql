@@ -35,7 +35,7 @@ type AuthPayload {
 }
 
 type Query {
-     feed(filter: String): Feed!
+     feed(filter: String, offset: Int, limit: Int, orderBy: LinkOrderByInput): Feed!
 }
 
 input RefreshTokenInput {
@@ -58,6 +58,12 @@ input Login {
       password: String!
 }
 
+input LinkOrderByInput {
+  description: Sort
+  url: Sort
+  createdAt: Sort
+}
+
 type Mutation {
      post(input: NewLink!): Link!
      signup(input: NewUser!): AuthPayload
@@ -70,5 +76,11 @@ type Subscription{
      newLink: Link!
      newVote: Vote!
 }
+
+enum Sort {
+  asc
+  desc
+}
+
 
 scalar DateTime
