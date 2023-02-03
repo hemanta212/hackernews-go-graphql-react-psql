@@ -3809,7 +3809,7 @@ func (ec *executionContext) unmarshalInputLinkOrderByInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"description", "url", "createdAt"}
+	fieldsInOrder := [...]string{"description", "createdAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3821,14 +3821,6 @@ func (ec *executionContext) unmarshalInputLinkOrderByInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			it.Description, err = ec.unmarshalOSort2ᚖgithubᚗcomᚋhemanta212ᚋhackernewsᚑgoᚑgraphqlᚋgraphᚋmodelᚐSort(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "url":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
-			it.URL, err = ec.unmarshalOSort2ᚖgithubᚗcomᚋhemanta212ᚋhackernewsᚑgoᚑgraphqlᚋgraphᚋmodelᚐSort(ctx, v)
 			if err != nil {
 				return it, err
 			}

@@ -29,7 +29,7 @@ const Link = (props) => {
   const authToken = localStorage.getItem(AUTH_TOKEN);
   
   const limit = LINKS_PER_PAGE;
-  const offset = 0;
+  const offset = Math.floor(props.index / LINKS_PER_PAGE) * LINKS_PER_PAGE;
 
   const [vote] = useMutation(VOTE_MUTATION, {
     variables: {

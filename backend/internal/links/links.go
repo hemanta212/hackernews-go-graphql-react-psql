@@ -2,6 +2,7 @@ package links
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"strconv"
 
@@ -25,9 +26,8 @@ type LinkMod struct {
 }
 
 type LinkOrderByInput struct {
-	Description Sort `json:"description"`
-	URL         Sort `json:"url"`
 	CreatedAt   Sort `json:"createdAt"`
+	Description Sort `json:"description"`
 }
 
 type Sort string
@@ -79,22 +79,26 @@ func GetLinkByID(id int) (*Link, error) {
 }
 
 func GetAll(mods *LinkMod) []*Link {
-	stmt, err := database.Db.Prepare(`SELECT
+	orderByClause := prepareOrderByClause(mods)
+	query := fmt.Sprintf(`SELECT
                        L.ID, L.Description, L.Url, L.UserID, L.CreatedAt,
                        U.Username, U.Email
                        FROM Links L
                        INNER JOIN Users U ON L.UserID = U.ID
-                       WHERE L.Description LIKE ?
-                       OR L.Url LIKE ?
-                       OR L.CreatedAt LIKE ?
-                       LIMIT ?
-                       OFFSET ?`)
+                       WHERE L.Description LIKE %[1]q
+                       OR L.Url LIKE %[1]q
+                       OR L.CreatedAt LIKE %[1]q
+                       ORDER BY %s
+                       LIMIT %d
+                       OFFSET %d`, mods.Filter, orderByClause, mods.Limit, mods.Offset)
+
+	stmt, err := database.Db.Prepare(query)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(mods.Filter, mods.Filter, mods.Filter, mods.Limit, mods.Offset)
+	rows, err := stmt.Query()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -114,4 +118,23 @@ func GetAll(mods *LinkMod) []*Link {
 		log.Fatal(err)
 	}
 	return links
+}
+
+func prepareOrderByClause(mods *LinkMod) string {
+	createdAt, desc := mods.OrderBy.CreatedAt, mods.OrderBy.Description
+	var clause string
+
+	if createdAt == "" && desc == "" {
+		// No sort specified
+		clause = "CreatedAt Desc"
+	} else if createdAt != "" && desc != "" {
+		// Both sort specified: Doesnt makes sense to do createdAt sort first then desc sorts
+		clause = fmt.Sprintf("CreatedAt %s, Description %s", createdAt, desc)
+	} else if createdAt != "" {
+		clause = fmt.Sprintf("CreatedAt %s", createdAt)
+	} else {
+		clause = fmt.Sprintf("Description %s", desc)
+	}
+
+	return clause
 }

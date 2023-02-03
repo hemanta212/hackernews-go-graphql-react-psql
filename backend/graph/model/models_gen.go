@@ -30,7 +30,6 @@ type Link struct {
 
 type LinkOrderByInput struct {
 	Description *Sort `json:"description"`
-	URL         *Sort `json:"url"`
 	CreatedAt   *Sort `json:"createdAt"`
 }
 

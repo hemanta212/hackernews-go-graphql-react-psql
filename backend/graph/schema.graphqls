@@ -60,7 +60,6 @@ input Login {
 
 input LinkOrderByInput {
   description: Sort
-  url: Sort
   createdAt: Sort
 }
 
