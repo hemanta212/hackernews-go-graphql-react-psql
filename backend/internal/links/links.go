@@ -79,18 +79,17 @@ func GetLinkByID(id int) (*Link, error) {
 }
 
 func GetAll(mods *LinkMod) []*Link {
-	orderByClause := prepareOrderByClause(mods)
 	query := fmt.Sprintf(`SELECT
                        L.ID, L.Description, L.Url, L.UserID, L.CreatedAt,
                        U.Username, U.Email
                        FROM Links L
                        INNER JOIN Users U ON L.UserID = U.ID
-                       WHERE L.Description LIKE %[1]q
-                       OR L.Url LIKE %[1]q
-                       OR L.CreatedAt LIKE %[1]q
+                       WHERE L.Description LIKE ?
+                       OR L.Url LIKE ?
+                       OR L.CreatedAt LIKE ?
                        ORDER BY %s
-                       LIMIT %d
-                       OFFSET %d`, mods.Filter, orderByClause, mods.Limit, mods.Offset)
+                       LIMIT ?
+                       OFFSET ?`, sanitizedOrderByClause(mods.OrderBy))
 
 	stmt, err := database.Db.Prepare(query)
 	if err != nil {
@@ -98,7 +97,7 @@ func GetAll(mods *LinkMod) []*Link {
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query()
+	rows, err := stmt.Query(mods.Filter, mods.Filter, mods.Filter, mods.Limit, mods.Offset)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -120,20 +119,38 @@ func GetAll(mods *LinkMod) []*Link {
 	return links
 }
 
-func prepareOrderByClause(mods *LinkMod) string {
-	createdAt, desc := mods.OrderBy.CreatedAt, mods.OrderBy.Description
-	var clause string
+func sanitizedOrderByClause(orderBy *LinkOrderByInput) string {
+	// To protect from arbitary/malicious inputs
+	// TODO: DRY, but its fine since its 2 atm
+	createdAtClause := ""
+	switch orderBy.CreatedAt {
+	case "asc":
+	case "desc":
+		createdAtClause = fmt.Sprintf("CreatedAt %s", orderBy.CreatedAt)
+	default:
+		createdAtClause = ""
+	}
 
-	if createdAt == "" && desc == "" {
-		// No sort specified
+	descriptionClause := ""
+	switch orderBy.Description {
+	case "asc":
+	case "desc":
+		descriptionClause = fmt.Sprintf("Description %s", orderBy.Description)
+	default:
+		descriptionClause = ""
+	}
+
+	var clause string
+	if createdAtClause == "" && descriptionClause == "" {
+		// No sort specified, provide default sorting
 		clause = "CreatedAt Desc"
-	} else if createdAt != "" && desc != "" {
+	} else if createdAtClause != "" && descriptionClause != "" {
 		// Both sort specified: Doesnt makes sense to do createdAt sort first then desc sorts
-		clause = fmt.Sprintf("CreatedAt %s, Description %s", createdAt, desc)
-	} else if createdAt != "" {
-		clause = fmt.Sprintf("CreatedAt %s", createdAt)
+		clause = createdAtClause + ", " + descriptionClause
+	} else if descriptionClause != "" {
+		clause = descriptionClause
 	} else {
-		clause = fmt.Sprintf("Description %s", desc)
+		clause = createdAtClause
 	}
 
 	return clause
