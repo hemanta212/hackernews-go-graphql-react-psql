@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { setContext } from "@apollo/client/link/context";
 import { split } from "@apollo/client";
-import {WebSocketLink} from "@apollo/client/link/ws";
+import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { AUTH_TOKEN } from "./constants";
 import "./styles/index.css";
@@ -16,7 +16,7 @@ import {
 } from "@apollo/client";
 
 const httpLink = createHttpLink({
-  uri: "http://localhost:8080/query",
+  uri: "https://vps.osac.org.np:8080/query",
 });
 
 const authLink = setContext((_, { headers }) => {
@@ -35,8 +35,9 @@ const wsLink = new WebSocketLink({
     reconnect: true,
     connectionParams: {
       authToken: localStorage.getItem(AUTH_TOKEN),
-  }
-}});
+    },
+  },
+});
 
 const splitLink = split(
   ({ query }) => {

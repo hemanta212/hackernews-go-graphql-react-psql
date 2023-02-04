@@ -26,12 +26,13 @@ const defaultPort = "8080"
 func main() {
 	router := chi.NewRouter()
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:8000", "http://localhost", "http://vps.osac.org.np:8000", "http://vps.osac.org.np"},
+		AllowedOrigins:   []string{"http://vps.osac.org.np:8000", "https://vps.osac.org.np", "https://vps.hemantasharma.com.np", "http://vps.osac.org.np"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
+		Debug:            true,
 	}))
 	router.Use(auth.Middleware())
 	port := os.Getenv("PORT")
@@ -64,6 +65,7 @@ func main() {
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe("0.0.0.0:"+port, router))
+	log.Printf("connect to https://localhost:%s/ for GraphQL playground", port)
+	SSL_PATH := "/etc/letsencrypt/live/vps.osac.org.np/"
+	log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSL_PATH+"fullchain.pem", SSL_PATH+"privkey.pem", router))
 }
