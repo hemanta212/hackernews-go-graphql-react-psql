@@ -13,7 +13,7 @@ import (
 	"github.com/hemanta212/hackernews-go-graphql/graph"
 	"github.com/hemanta212/hackernews-go-graphql/graph/model"
 	"github.com/hemanta212/hackernews-go-graphql/internal/auth"
-	database "github.com/hemanta212/hackernews-go-graphql/internal/pkg/db/mysql"
+	database "github.com/hemanta212/hackernews-go-graphql/internal/pkg/db/postgresql"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -26,7 +26,7 @@ const defaultPort = "8080"
 func main() {
 	router := chi.NewRouter()
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://vps.osac.org.np:8000", "https://vps.osac.org.np", "https://vps.hemantasharma.com.np", "http://vps.osac.org.np"},
+		AllowedOrigins:   []string{"http://vps.osac.org.np:8000", "https://vps.osac.org.np", "https://vps.hemantasharma.com.np", "http://vps.osac.org.np", "http://localhost:8000", "http://localhost:8080"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -42,7 +42,7 @@ func main() {
 
 	database.InitDB()
 	defer database.CloseDB()
-	database.Migrate()
+	// database.Migrate()
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
 		LinkObservers: map[string]chan *model.Link{},
@@ -66,6 +66,7 @@ func main() {
 	router.Handle("/query", srv)
 
 	log.Printf("connect to https://localhost:%s/ for GraphQL playground", port)
-	SSL_PATH := "/etc/letsencrypt/live/vps.osac.org.np/"
-	log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSL_PATH+"fullchain.pem", SSL_PATH+"privkey.pem", router))
+	// SSL_PATH := "/etc/letsencrypt/live/vps.osac.org.np/"
+	// log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSL_PATH+"fullchain.pem", SSL_PATH+"privkey.pem", router))
+	log.Fatal(http.ListenAndServe("0.0.0.0:"+port, router))
 }

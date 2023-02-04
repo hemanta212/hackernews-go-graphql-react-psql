@@ -1,0 +1,7 @@
+BEGIN;
+  ALTER TABLE Links
+  RENAME COLUMN Title TO Description;
+
+  ALTER TABLE Links
+  RENAME COLUMN Address TO Url;
+COMMIT;

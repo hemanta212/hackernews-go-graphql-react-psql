@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
-	database "github.com/hemanta212/hackernews-go-graphql/internal/pkg/db/mysql"
+	database "github.com/hemanta212/hackernews-go-graphql/internal/pkg/db/postgresql"
 	"github.com/hemanta212/hackernews-go-graphql/internal/users"
 )
 
@@ -15,7 +16,7 @@ type Link struct {
 	Description string
 	Url         string
 	PostedBy    *users.User
-	CreatedAt   string
+	CreatedAt   time.Time
 }
 
 type LinkMod struct {
@@ -37,27 +38,25 @@ const (
 	SortDesc Sort = "desc"
 )
 
-func (link *Link) Save() int64 {
-	stmt, err := database.Db.Prepare("INSERT INTO Links(Description, Url, UserID, CreatedAt) VALUES(?, ?, ?, ?)")
+func (link *Link) Save() int {
+	var lastInsertId int
+	var createdAt time.Time
+	err := database.Db.QueryRow("INSERT INTO Links(Description, Url, UserID) VALUES($1,$2,$3) returning id,CreatedAt;",
+		link.Description, link.Url, link.PostedBy.ID,
+	).Scan(&lastInsertId, &createdAt)
+
+	link.CreatedAt = createdAt
+	link.ID = strconv.Itoa(lastInsertId)
+
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	res, err := stmt.Exec(link.Description, link.Url, link.PostedBy.ID, link.CreatedAt)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	id, err := res.LastInsertId()
-	if err != nil {
-		log.Fatal("Error: ", err.Error())
-	}
-	return id
+	return lastInsertId
 }
 
 func GetLinkByID(id int) (*Link, error) {
 	stmt, err := database.Db.Prepare(
-		"SELECT L.Description, L.Url, L.CreatedAt, L.UserID, U.Username, U.Email from Links L inner join Users U on L.UserID = U.ID WHERE L.ID=?")
+		"SELECT L.Description, L.Url, L.CreatedAt, L.UserID, U.Username, U.Email from Links L inner join Users U on L.UserID = U.ID WHERE L.ID=$1")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -84,12 +83,12 @@ func GetAll(mods *LinkMod) []*Link {
                        U.Username, U.Email
                        FROM Links L
                        INNER JOIN Users U ON L.UserID = U.ID
-                       WHERE L.Description LIKE ?
-                       OR L.Url LIKE ?
-                       OR L.CreatedAt LIKE ?
+                       WHERE L.Description LIKE $1
+                       OR L.Url LIKE $1
+                       OR to_char(L.CreatedAt, 'YYYY') LIKE $1
                        ORDER BY %s
-                       LIMIT ?
-                       OFFSET ?`, sanitizedOrderByClause(mods.OrderBy))
+                       LIMIT $2
+                       OFFSET $3`, sanitizedOrderByClause(mods.OrderBy))
 
 	stmt, err := database.Db.Prepare(query)
 	if err != nil {
@@ -97,7 +96,7 @@ func GetAll(mods *LinkMod) []*Link {
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(mods.Filter, mods.Filter, mods.Filter, mods.Limit, mods.Offset)
+	rows, err := stmt.Query(mods.Filter, mods.Limit, mods.Offset)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -124,8 +123,7 @@ func sanitizedOrderByClause(orderBy *LinkOrderByInput) string {
 	// TODO: DRY, but its fine since its 2 atm
 	createdAtClause := ""
 	switch orderBy.CreatedAt {
-	case "asc":
-	case "desc":
+	case "asc", "desc":
 		createdAtClause = fmt.Sprintf("CreatedAt %s", orderBy.CreatedAt)
 	default:
 		createdAtClause = ""
@@ -133,8 +131,7 @@ func sanitizedOrderByClause(orderBy *LinkOrderByInput) string {
 
 	descriptionClause := ""
 	switch orderBy.Description {
-	case "asc":
-	case "desc":
+	case "asc", "desc":
 		descriptionClause = fmt.Sprintf("Description %s", orderBy.Description)
 	default:
 		descriptionClause = ""

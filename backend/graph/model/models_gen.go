@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 )
 
 type AuthPayload struct {
@@ -20,12 +21,12 @@ type Feed struct {
 }
 
 type Link struct {
-	ID          string  `json:"id"`
-	Description string  `json:"description"`
-	PostedBy    *User   `json:"postedBy"`
-	URL         string  `json:"url"`
-	CreatedAt   string  `json:"createdAt"`
-	Votes       []*Vote `json:"votes"`
+	ID          string    `json:"id"`
+	Description string    `json:"description"`
+	PostedBy    *User     `json:"postedBy"`
+	URL         string    `json:"url"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Votes       []*Vote   `json:"votes"`
 }
 
 type LinkOrderByInput struct {

@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	database "github.com/hemanta212/hackernews-go-graphql/internal/pkg/db/mysql"
+	database "github.com/hemanta212/hackernews-go-graphql/internal/pkg/db/postgresql"
 )
 
 type User struct {
@@ -17,24 +17,24 @@ type User struct {
 	Email    *string `json:"email"`
 }
 
-func (user *User) Save() (int64, error) {
-	stmt, err := database.Db.Prepare("INSERT INTO Users(Username, Password, Email) VALUES(?, ?, ?)")
-	if err != nil {
-		return -1, err
-	}
+func (user *User) Save() (int, error) {
 	hashedPassword, err := HashPassword(user.Password)
 	if err != nil {
 		return -1, err
 	}
-	res, err := stmt.Exec(user.Username, hashedPassword, user.Email)
+
+	var lastInsertId int
+	err = database.Db.QueryRow("INSERT INTO Users(Username, Password, Email) VALUES($1,$2,$3) returning id;",
+		user.Username, hashedPassword, user.Email,
+	).Scan(&lastInsertId)
+
+	user.ID = strconv.Itoa(lastInsertId)
+
 	if err != nil {
 		return -1, err
 	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return -1, err
-	}
-	return id, nil
+
+	return lastInsertId, nil
 }
 
 func (user *User) Authenticate(rawPassword string) bool {
@@ -42,7 +42,7 @@ func (user *User) Authenticate(rawPassword string) bool {
 }
 
 func GetUserByUsername(userName string) (*User, error) {
-	stmt, err := database.Db.Prepare("SELECT ID, password, email FROM Users WHERE username=?")
+	stmt, err := database.Db.Prepare("SELECT ID, password, email FROM Users WHERE username=$1")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,7 +61,7 @@ func GetUserByUsername(userName string) (*User, error) {
 }
 
 func GetUserByID(id int) (*User, error) {
-	stmt, err := database.Db.Prepare("SELECT username, password, email FROM Users WHERE id=?")
+	stmt, err := database.Db.Prepare("SELECT username, password, email FROM Users WHERE id=$1")
 	if err != nil {
 		log.Fatal(err)
 	}

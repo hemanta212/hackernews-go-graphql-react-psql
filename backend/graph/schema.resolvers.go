@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 
 	"github.com/hemanta212/hackernews-go-graphql/graph/model"
 	"github.com/hemanta212/hackernews-go-graphql/internal/auth"
@@ -31,10 +30,8 @@ func (r *mutationResolver) Post(ctx context.Context, input model.NewLink) (*mode
 		Description: input.Description,
 		Url:         input.URL,
 		PostedBy:    user,
-		CreatedAt:   time.Now().UTC().Format("2006-01-02 15:04:05"),
 	}
-	linkID := link.Save()
-	link.ID = strconv.FormatInt(linkID, 10)
+	link.Save()
 
 	mLink := model.FromLink(link)
 	r.CreatedLink = mLink
@@ -58,11 +55,10 @@ func (r *mutationResolver) Signup(ctx context.Context, input model.NewUser) (*mo
 		Email:    input.Email,
 	}
 
-	id, err := user.Save()
+	_, err := user.Save()
 	if err != nil {
 		return &payload, err
 	}
-	user.ID = strconv.FormatInt(id, 10)
 
 	token, err := jwt.GenerateToken(user.Username)
 	if err != nil {
@@ -112,8 +108,7 @@ func (r *mutationResolver) Vote(ctx context.Context, linkID string) (*model.Vote
 		Link:    link,
 		VotedBy: user,
 	}
-	voteID := vote.Save()
-	vote.ID = strconv.FormatInt(voteID, 10)
+	vote.Save()
 
 	mVote := model.FromVote(vote)
 	r.CreatedVote = mVote

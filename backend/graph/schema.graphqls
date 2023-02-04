@@ -13,7 +13,7 @@ type Link {
     description: String!
     postedBy: User!
     url: String!
-    createdAt: DateTime!
+    createdAt: Time!
     votes: [Vote!]!
 }
 
@@ -82,4 +82,4 @@ enum Sort {
 }
 
 
-scalar DateTime
+scalar Time
