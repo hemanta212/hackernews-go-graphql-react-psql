@@ -18,7 +18,7 @@ import "./styles/index.css";
 import App from "./components/App";
 
 const httpLink = createHttpLink({
-  uri: "http://localhost:8080/query",
+  uri: "https://vps.osac.org.np:8080/query",
 });
 
 const authLink = setContext((_, { headers }) => {
@@ -32,7 +32,7 @@ const authLink = setContext((_, { headers }) => {
 });
 
 const wsLink = new WebSocketLink({
-  uri: `ws://localhost:8080/query`,
+  uri: `wss://vps.osac.org.np:8080/query`,
   options: {
     reconnect: true,
     connectionParams: {

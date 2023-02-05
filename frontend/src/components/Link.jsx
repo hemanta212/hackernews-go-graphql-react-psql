@@ -65,7 +65,7 @@ const Link = (props) => {
         },
         variables: {
           limit: limit,
-          limit: offset,
+          offset: offset,
           orderBy,
         },
       });
@@ -91,7 +91,7 @@ const Link = (props) => {
       </div>
       <div className="ml1">
         <div>
-          {link.description} ({link.url})
+          {link.description} (<a href={link.url}>{link.url}</a>)
         </div>
         {
           <div className="f6 lh-copy gray">

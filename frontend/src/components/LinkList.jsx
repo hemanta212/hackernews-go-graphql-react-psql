@@ -165,7 +165,7 @@ const getQueryVariables = (isNewPage, page) => {
   const offset = isNewPage ? (page - 1) * LINKS_PER_PAGE : 0;
   const limit = isNewPage ? LINKS_PER_PAGE : 15;
   const orderBy = { createdAt: "desc" };
-  return { limit, offset, orderBy };
+  return { limit: limit, offset: offset, orderBy };
 };
 
 const getLinksToRender = (isNewPage, data) => {

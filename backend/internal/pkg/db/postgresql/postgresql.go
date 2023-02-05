@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"log"
-	"os"
 
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/postgres"
@@ -14,7 +13,9 @@ import (
 var Db *sql.DB
 
 func InitDB() {
-	db, err := sql.Open("pgx", os.Getenv("PG_DATABASE_URL"))
+	// DB_USER, DB_PASSWORD, DB_NAME := os.Getenv("PGUSER"), os.Getenv("PGPASSWORD"), os.Getenv("PGDATABASE")
+	dbinfo := "host=localhost user=postgres password=dbpass dbname=hackernews sslmode=disable"
+	db, err := sql.Open("pgx", dbinfo)
 	if err != nil {
 		log.Panic(err)
 	}
