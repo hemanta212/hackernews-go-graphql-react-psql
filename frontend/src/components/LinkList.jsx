@@ -54,8 +54,8 @@ const NEW_VOTES_SUBSCRIPTION = gql`
 `;
 
 export const FEED_QUERY = gql`
-  query FeedQuery($limit: Int, $offset: Int) {
-    feed(limit: $limit, offset: $offset) {
+  query FeedQuery($limit: Int, $offset: Int, $orderBy: LinkOrderByInput) {
+    feed(limit: $limit, offset: $offset, orderBy: $orderBy) {
       id
       links {
         id
@@ -86,9 +86,12 @@ const LinkList = () => {
   const page = parseInt(pageIndexParams[pageIndexParams.length - 1]);
   const pageIndex = page ? (page - 1) * LINKS_PER_PAGE : 0;
 
-  const { data, loading, error, subscribeToMore } = useQuery(FEED_QUERY, {
-    variables: getQueryVariables(isNewPage, page),
-  });
+  const { loading, error, data, subscribeToMore, refetch } = useQuery(
+    FEED_QUERY,
+    {
+      variables: getQueryVariables(isNewPage, page),
+    }
+  );
 
   subscribeToMore({
     document: NEW_LINKS_SUBSCRIPTION,
@@ -119,7 +122,12 @@ const LinkList = () => {
       {data && (
         <>
           {getLinksToRender(isNewPage, data).map((link, index) => (
-            <Link key={link.id} link={link} index={index + pageIndex} />
+            <Link
+              key={link.id}
+              link={link}
+              index={index + pageIndex}
+              refetch={refetch}
+            />
           ))}
 
           {isNewPage && (
@@ -156,8 +164,8 @@ const LinkList = () => {
 const getQueryVariables = (isNewPage, page) => {
   const offset = isNewPage ? (page - 1) * LINKS_PER_PAGE : 0;
   const limit = isNewPage ? LINKS_PER_PAGE : 15;
-  //const orderBy = {createdAt: "desc" };
-  return { limit, offset };
+  const orderBy = { createdAt: "desc" };
+  return { limit, offset, orderBy };
 };
 
 const getLinksToRender = (isNewPage, data) => {

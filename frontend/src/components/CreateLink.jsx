@@ -21,32 +21,51 @@ const CreateLink = () => {
     url: "",
   });
   const navigate = useNavigate();
-  const [createLink] = useMutation(CREATE_LINK_MUTATION, {
-    variables: {
-      input: {
-        description: formState.description,
-        url: formState.url,
-      },
-    },
-    onCompleted: () => navigate("/"),
-    update: (cache, { data: { post } }) => {
-      const limit = LINKS_PER_PAGE;
-      const offset = 0;
-      const data = cache.readQuery({ query: FEED_QUERY });
-      cache.writeQuery({
-        query: FEED_QUERY,
-        data: {
-          feed: {
-            links: [post, ...data.feed.links],
-          },
+
+  const [createLink, { mutData, loading, error }] = useMutation(
+    CREATE_LINK_MUTATION,
+    {
+      variables: {
+        input: {
+          description: formState.description,
+          url: formState.url,
         },
-        variables: {
-          limit,
-          offset,
-        }
-      });
-    },
-  });
+      },
+      onCompleted: () => navigate("/"),
+      update: (cache, { data: { post } }) => {
+        const limit = LINKS_PER_PAGE;
+        const offset = 0;
+        const orderBy = { createdAt: "desc" };
+        const data = cache.readQuery({
+          query: FEED_QUERY,
+          variables: {
+            limit,
+            offset,
+            orderBy,
+          },
+        });
+        if (!data) return;
+        cache.writeQuery({
+          query: FEED_QUERY,
+          data: {
+            feed: {
+              links: [post, ...data.feed.links],
+            },
+          },
+          variables: {
+            limit,
+            offset,
+            orderBy,
+          },
+        });
+      },
+    }
+  );
+
+  if (loading) return "Submitting...";
+
+  if (error) return `Submission error! ${error.message}`;
+
   return (
     <div>
       <form

@@ -1,7 +1,7 @@
 import React from "react";
-import { gql, useMutation } from "@apollo/client";
-import { AUTH_TOKEN, LINKS_PER_PAGE} from "../constants";
+import { AUTH_TOKEN, LINKS_PER_PAGE } from "../constants";
 import { timeDifferenceForDate } from "../utils";
+import { useMutation, gql } from "@apollo/client";
 import { FEED_QUERY } from "./LinkList";
 
 const VOTE_MUTATION = gql`
@@ -27,28 +27,30 @@ const VOTE_MUTATION = gql`
 const Link = (props) => {
   const { link } = props;
   const authToken = localStorage.getItem(AUTH_TOKEN);
-  
+
   const limit = LINKS_PER_PAGE;
-  const offset = Math.floor(props.index / LINKS_PER_PAGE) * LINKS_PER_PAGE;
+  const offset = 0;
+  const orderBy = { createdAt: "desc" };
 
   const [vote] = useMutation(VOTE_MUTATION, {
     variables: {
-      linkID: link.id
+      linkID: link.id,
     },
     update: (cache, { data: { vote } }) => {
       const { feed } = cache.readQuery({
         query: FEED_QUERY,
         variables: {
-          limit,
-          offset,
-        }
+          limit: limit,
+          offset: offset,
+          orderBy,
+        },
       });
 
       const updatedLinks = feed.links.map((feedLink) => {
         if (feedLink.id === link.id) {
           return {
             ...feedLink,
-            votes: [...feedLink.votes, vote]
+            votes: [...feedLink.votes, vote],
           };
         }
         return feedLink;
@@ -58,15 +60,16 @@ const Link = (props) => {
         query: FEED_QUERY,
         data: {
           feed: {
-            links: updatedLinks
-          }
+            links: updatedLinks,
+          },
         },
         variables: {
-          limit,
-          offset,
-        }
+          limit: limit,
+          limit: offset,
+          orderBy,
+        },
       });
-    }
+    },
   });
 
   return (
@@ -77,7 +80,10 @@ const Link = (props) => {
           <div
             className="ml1 gray f11"
             style={{ cursor: "pointer" }}
-            onClick={vote}
+            onClick={() => {
+              vote();
+              props.refetch();
+            }}
           >
             ▲
           </div>
@@ -88,9 +94,9 @@ const Link = (props) => {
           {link.description} ({link.url})
         </div>
         {
-          <div className="f6 1h-copy gray">
+          <div className="f6 lh-copy gray">
             {link.votes.length} votes | by{" "}
-            {link.postedBy ? link.postedBy.username : "Anonymous"}{" "}
+            {link.postedBy ? link.postedBy.username : "Unknown"}{" "}
             {timeDifferenceForDate(link.createdAt)}
           </div>
         }

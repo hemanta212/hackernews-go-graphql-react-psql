@@ -180,7 +180,10 @@ func (r *queryResolver) Feed(ctx context.Context, filter *string, offset *int, l
 
 		resultLinks = append(resultLinks, modelLink)
 	}
-	return &model.Feed{ID: "1", Links: resultLinks, Count: len(resultLinks)}, nil
+
+	feedId := fmt.Sprintf(`filter-%s-limit-%d-offset-%d-createdat-%s-description-%s}`,
+		linkMod.Filter, linkMod.Limit, linkMod.Offset, linkMod.OrderBy.CreatedAt, linkMod.OrderBy.Description)
+	return &model.Feed{ID: "main-feed::" + feedId, Links: resultLinks, Count: len(resultLinks)}, nil
 }
 
 // NewLink is the resolver for the newLink field.

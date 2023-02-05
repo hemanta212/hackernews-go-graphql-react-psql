@@ -1,12 +1,13 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+
 import "../styles/App.css";
 import CreateLink from "./CreateLink";
 import Header from "./Header";
 import LinkList from "./LinkList";
-import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "./Login";
 import Search from "./Search";
 
-function App() {
+export default function App() {
   return (
     <div className="center w85">
       <Header />
@@ -23,5 +24,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

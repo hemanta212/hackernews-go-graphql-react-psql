@@ -5,15 +5,17 @@ import { setContext } from "@apollo/client/link/context";
 import { split } from "@apollo/client";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
-import { AUTH_TOKEN } from "./constants";
-import "./styles/index.css";
-import App from "./components/App";
+
 import {
   ApolloProvider,
   ApolloClient,
   createHttpLink,
   InMemoryCache,
 } from "@apollo/client";
+
+import { AUTH_TOKEN } from "./constants";
+import "./styles/index.css";
+import App from "./components/App";
 
 const httpLink = createHttpLink({
   uri: "http://localhost:8080/query",

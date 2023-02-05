@@ -26,7 +26,7 @@ const defaultPort = "8080"
 func main() {
 	router := chi.NewRouter()
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://vps.osac.org.np:8000", "https://vps.osac.org.np", "https://vps.hemantasharma.com.np", "http://vps.osac.org.np", "http://localhost:8000", "http://localhost:8080"},
+		AllowedOrigins:   []string{"http://vps.osac.org.np:8000", "https://vps.osac.org.np", "https://vps.hemantasharma.com.np", "http://vps.osac.org.np", "http://localhost:8000", "http://localhost:8080", "http://localhost:5173"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
