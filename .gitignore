@@ -46,3 +46,4 @@
 **/*.njsproj
 **/*.sln
 **/*.sw?
+/backend/vendor/
