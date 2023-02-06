@@ -25,6 +25,14 @@ local-db:
 
 	@ echo "MySQL is up and running!"
 
+docker-up:
+	go mod tidy
+	go mod download
+	go mod vendor
+	go mod verify
+	docker build -t hackernews-dev .
+	docker run -it --rm -v $(HTTPS_SSL)/fullchain.pem:/etc/letsencrypt/live/vps.osac.org.np/fullchain.pem -v $(HTTPS_SSL)/privkey.pem:/etc/letsencrypt/live/vps.osac.org.np/privkey.pem -v $(PWD):/go/src/backend --net=host --env-file=.env hackernews-dev
+
 docker-db:
 	@ docker exec -it postgres psql -U $(PGUSER) -d $(PGDATABASE)
 
@@ -68,6 +76,6 @@ gqlgen-init:
 dev:
 	@ go run ./server.go
 
-run:
-	go build -o ./build/ .
-	./build/hackernews-go-graphql
+run: migrate-up
+	@ go build -o ./build/ .
+	@ ./build/hackernews-go-graphql
