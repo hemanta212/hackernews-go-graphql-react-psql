@@ -1,0 +1,43 @@
+version: "3.1"
+
+services:
+  postgres:
+    container_name: "postgres"
+    image: "postgres:latest"
+    volumes:
+      - hackernews-postgres-dev:/var/lib/postgresql/data
+    env_file:
+      - $PWD/backend/.env
+    ports:
+      - "5432:5432"
+    networks:
+      - docker-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "hackernews"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+
+  hackernews:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - $PWD/backend/:/go/src/backend
+      - $HTTPS_SSL/fullchain.pem:/etc/letsencrypt/live/vps.osac.org.np/fullchain.pem
+      - $HTTPS_SSL/privkey.pem:/etc/letsencrypt/live/vps.osac.org.np/privkey.pem
+    env_file:
+      - $PWD/backend/.env
+    ports:
+      - "8080:8080"
+    networks:
+      - docker-network
+
+networks:
+  docker-network:
+    driver: bridge
+
+volumes:
+  hackernews-postgres-dev:
