@@ -1,4 +1,6 @@
-FROM golang:1.18-bullseye
+FROM golang:1.18-alpine
+
+RUN apk add --no-cache make
 
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
