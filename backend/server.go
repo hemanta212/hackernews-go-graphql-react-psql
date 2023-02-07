@@ -68,4 +68,5 @@ func main() {
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	SSL_PATH := "/etc/letsencrypt/live/vps.osac.org.np/"
 	log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSL_PATH+"fullchain.pem", SSL_PATH+"privkey.pem", router))
+	// log.Fatal(http.ListenAndServe("0.0.0.0:"+port, router))
 }

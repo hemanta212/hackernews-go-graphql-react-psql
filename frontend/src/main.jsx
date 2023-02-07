@@ -3,7 +3,8 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { setContext } from "@apollo/client/link/context";
 import { split } from "@apollo/client";
-import { WebSocketLink } from "@apollo/client/link/ws";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 import { getMainDefinition } from "@apollo/client/utilities";
 
 import {
@@ -18,6 +19,7 @@ import "./styles/index.css";
 import App from "./components/App";
 
 const httpLink = createHttpLink({
+  // uri: "http://localhost:8080/query",
   uri: "https://vps.osac.org.np:8080/query",
 });
 
@@ -31,15 +33,17 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
-const wsLink = new WebSocketLink({
-  uri: `wss://vps.osac.org.np:8080/query`,
-  options: {
-    reconnect: true,
-    connectionParams: {
-      authToken: localStorage.getItem(AUTH_TOKEN),
+const wsLink = new GraphQLWsLink(
+  createClient({
+    // url: "ws://localhost:8080/query",
+    url: "wss://vps.osac.org.np:8080/query",
+    options: {
+      connectionParams: {
+        authToken: localStorage.getItem(AUTH_TOKEN),
+      },
     },
-  },
-});
+  })
+);
 
 const splitLink = split(
   ({ query }) => {
