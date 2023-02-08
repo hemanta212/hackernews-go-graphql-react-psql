@@ -31,9 +31,15 @@ HTTPS_SSL=/folder/to/the/ssl/certs/and/keys
 
 - Run the command `docker compose up`
 
+## Running with ssl mode
+
+- Make sure to export HTTPS_SSL env var to the directory containing the ssl certs before running
+
+```sh
+docker compose up
+```
 ## Frontend
 - Uses React.js + Vite with Apollo client library
-
 
 ## Backend
 - Uses go, graphql and psql
