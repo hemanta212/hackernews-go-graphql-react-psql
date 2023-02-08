@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine
+FROM golang:1.19-alpine
 
 RUN apk add --no-cache make
 
@@ -15,4 +15,4 @@ EXPOSE 8080
 
 RUN mkdir -p /etc/letsencrypt/live/vps.osac.org.np
 
-CMD ["make", "run"]
+CMD ["make", "docker-run"]

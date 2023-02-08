@@ -12,24 +12,28 @@ V?=
 # Number of migrations - this is optionally used on up and down commands
 N?=
 
+dev:
+	@ go run ./server.go
 
-local-db:
-	@ docker-compose up -d
+run: migrate-up
+	@ go build -o ./build/ .
+	@ ./build/hackernews-go-graphql
 
+docker-run: vendor run
 
-	@ until mysql --host=$(PSQL_HOST) --port=$(PSQL_PORT) --user=$(PSQL_USER) -p$(PSQL_PASSWORD) --protocol=tcp -e 'SELECT 1' >/dev/null 2>&1 && exit 0; do \
-	  >&2 echo "MySQL is unavailable - sleeping"; \
-	  sleep 5 ; \
-	done
-
-
-	@ echo "MySQL is up and running!"
-
-docker-up:
+vendor:
 	go mod tidy
 	go mod download
 	go mod vendor
 	go mod verify
+
+gqlgen-gen:
+	go run github.com/99designs/gqlgen@latest generate
+
+gqlgen-init:
+	go run github.com/99designs/gqlgen@latest init
+	
+docker-up: vendor
 	docker build -t hackernews-dev .
 	docker run -it --rm -v $(HTTPS_SSL)/fullchain.pem:/etc/letsencrypt/live/vps.osac.org.np/fullchain.pem -v $(HTTPS_SSL)/privkey.pem:/etc/letsencrypt/live/vps.osac.org.np/privkey.pem -v $(PWD):/go/src/backend --net=host --env-file=.env hackernews-dev
 
@@ -66,16 +70,3 @@ migration-version: migrate-setup
 	@ migrate -database 'postgres://$(PSQL_DSN)' -path $(PSQL_MIGRATION_DIR) version
 
 
-gqlgen-gen:
-	go run github.com/99designs/gqlgen@latest generate
-
-
-gqlgen-init:
-	go run github.com/99designs/gqlgen@latest init
-
-dev:
-	@ go run ./server.go
-
-run: migrate-up
-	@ go build -o ./build/ .
-	@ ./build/hackernews-go-graphql
