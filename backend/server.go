@@ -42,7 +42,6 @@ func main() {
 
 	database.InitDB()
 	defer database.CloseDB()
-	// database.Migrate()
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
 		LinkObservers: map[string]chan *model.Link{},
@@ -66,7 +65,14 @@ func main() {
 	router.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	SSL_PATH := "/etc/letsencrypt/live/vps.osac.org.np/"
-	log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSL_PATH+"fullchain.pem", SSL_PATH+"privkey.pem", router))
-	// log.Fatal(http.ListenAndServe("0.0.0.0:"+port, router))
+
+	SSL_PATH := os.Getenv("HTTPS_SSL")
+	if SSL_PATH != "" {
+		log.Printf("HTTPS_SSL env var is exported to %s, initiating https protocol", SSL_PATH)
+		log.Printf("connect to https://localhost:%s/ for GraphQL playground", port)
+		log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSL_PATH+"fullchain.pem", SSL_PATH+"privkey.pem", router))
+	} else {
+		log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+		log.Fatal(http.ListenAndServe("0.0.0.0:"+port, router))
+	}
 }

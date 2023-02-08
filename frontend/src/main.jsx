@@ -19,8 +19,10 @@ import "./styles/index.css";
 import App from "./components/App";
 
 const httpLink = createHttpLink({
-  // uri: "http://localhost:8080/query",
-  uri: "https://vps.osac.org.np:8080/query",
+  uri:
+    import.meta.env.MODE == "production"
+      ? import.meta.env.VITE_API_URL
+      : "http://localhost:8080/query",
 });
 
 const authLink = setContext((_, { headers }) => {
@@ -35,8 +37,10 @@ const authLink = setContext((_, { headers }) => {
 
 const wsLink = new GraphQLWsLink(
   createClient({
-    // url: "ws://localhost:8080/query",
-    url: "wss://vps.osac.org.np:8080/query",
+    url:
+      import.meta.env.MODE == "production"
+        ? import.meta.env.VITE_API_WS_URL
+        : "ws://localhost:8080/query",
     options: {
       connectionParams: {
         authToken: localStorage.getItem(AUTH_TOKEN),
