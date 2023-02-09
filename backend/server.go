@@ -26,9 +26,23 @@ const defaultPort = "8080"
 func main() {
 	router := chi.NewRouter()
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://vps.osac.org.np", "https://vps.hemantasharma.com.np", "http://vps.osac.org.np", "http://localhost:8000", "http://localhost:8080", "http://localhost:5173", "http://vps.osac.org.np:8000", "http://localhost:9000", "https://vps.osac.org.np:9000"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedOrigins: []string{
+			"https://vps.osac.org.np",
+			"http://vps.osac.org.np",
+			"http://vps.osac.org.np:8000",
+			"https://vps.hemantasharma.com.np",
+			"http://localhost:8000",
+			"http://localhost", "http://localhost:80",
+			"http://localhost:9000",
+			"http://localhost:8080", "http://localhost:8008",
+		},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{
+			"Accept",
+			"Authorization",
+			"Content-Type",
+			"X-CSRF-Token",
+		},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
@@ -64,12 +78,13 @@ func main() {
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 
-	SSLPath := os.Getenv("HTTPS_SSL")
-	if SSLPath != "" {
-		log.Printf("HTTPS_SSL env var is exported to %s, initiating https protocol", SSLPath)
+	SSLCert, SSLKey := os.Getenv("SSL_CERT"), os.Getenv("SSL_KEY")
+	if SSLCert != "" && SSLKey != "" {
+		log.Printf("SSL env vars is exported to %q, %q, initiating https protocol", SSLCert, SSLKey)
 		log.Printf("connect to https://localhost:%s/ for GraphQL playground", port)
-		log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSLPath+"/fullchain.pem", SSLPath+"/privkey.pem", router))
+		log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSLCert, SSLKey, router))
 	} else {
+		log.Printf("SSL env vars not exported cert,key pair -> %q, %q, using http", SSLCert, SSLKey)
 		log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 		log.Fatal(http.ListenAndServe("0.0.0.0:"+port, router))
 	}

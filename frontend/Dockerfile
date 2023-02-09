@@ -1,20 +1,12 @@
-FROM node:16.19-alpine
-
+FROM node:16.19-alpine as dev
 RUN apk add --no-cache make
-
-RUN npm install --location=global serve
-
-ENV APP_HOME /frontend/app
-RUN mkdir -p "$APP_HOME"
-
-WORKDIR "$APP_HOME"
-
-RUN mkdir -p /etc/letsencrypt/live/vps.osac.org.np
-
-COPY package.json .
-
+WORKDIR /node/src/frontend
+COPY package.json package-lock.json ./
 RUN npm install
+EXPOSE 8000
 
+FROM dev as prod
+RUN apk add --no-cache make\
+    && npm install --location=global serve
 EXPOSE 443
-
-CMD make run
+CMD ["make", "run"]

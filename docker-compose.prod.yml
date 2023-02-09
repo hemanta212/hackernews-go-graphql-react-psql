@@ -1,0 +1,38 @@
+version: "3.1"
+
+services:
+  hackernews:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./.env
+    volumes:
+      - $SSL_CERT:$SSL_CERT
+      - $SSL_KEY:$SSL_KEY
+    ports:
+      - "8008:8080"
+    networks:
+      - docker-network
+
+  hackernews-frontend:
+    build: ./frontend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./frontend/:/node/src/frontend
+      - $SSL_CERT:$SSL_CERT
+      - $SSL_KEY:$SSL_KEY
+    env_file:
+      - ./.env
+    ports:
+      - "443:443"
+      - "9000:443"
+    networks:
+      - docker-network
+
+networks:
+  docker-network:
+    driver: bridge

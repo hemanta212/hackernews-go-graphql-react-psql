@@ -1,10 +1,3 @@
-# Fill in these in your environment vars
-#PSQL_DATABASE
-#PSQL_USER
-#PSQL_PASSWORD
-#PSQL_HOST
-#PSQL_PORT ?= 5432
-
 PSQL_DSN ?= $(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)?sslmode=disable
 PSQL_MIGRATION_DIR ?= internal/pkg/db/migrations/postgresql
 # Version - this is optionally used on goto command
@@ -12,14 +5,14 @@ V?=
 # Number of migrations - this is optionally used on up and down commands
 N?=
 
-dev:
+dev: migrate-up
 	@ go run ./server.go
 
-run: migrate-up
+build: vendor
 	@ go build -o ./build/ .
-	@ ./build/hackernews-go-graphql
 
-docker-run: vendor run
+run: build
+	@ ./build/hackernews-go-graphql
 
 vendor:
 	go mod tidy
@@ -32,10 +25,10 @@ gqlgen-gen:
 
 gqlgen-init:
 	go run github.com/99designs/gqlgen@latest init
-	
+
 docker-up: vendor
 	docker build -t hackernews-dev .
-	docker run -it --rm -v $(HTTPS_SSL)/fullchain.pem:/etc/letsencrypt/live/vps.osac.org.np/fullchain.pem -v $(HTTPS_SSL)/privkey.pem:/etc/letsencrypt/live/vps.osac.org.np/privkey.pem -v $(PWD):/go/src/backend --net=host --env-file=.env hackernews-dev
+	docker run -it --rm -v $(SSL_CERT):$(SSL_CERT) -v $(SSL_KEY):$(SSL_KEY) -v $(PWD):/go/src/backend --net=host --env-file=.env hackernews-dev
 
 docker-db:
 	@ docker exec -it postgres psql -U $(PGUSER) -d $(PGDATABASE)
@@ -68,5 +61,3 @@ force-version: migrate-setup
 
 migration-version: migrate-setup
 	@ migrate -database 'postgres://$(PSQL_DSN)' -path $(PSQL_MIGRATION_DIR) version
-
-

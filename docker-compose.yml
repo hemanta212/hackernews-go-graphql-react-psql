@@ -1,8 +1,11 @@
 version: "3.1"
 
 services:
-  hackernews:
-    build: ./backend
+  hackernews-dev:
+    build:
+      context: ./backend
+      target: dev
+    command: make dev
     depends_on:
       postgres:
         condition: service_healthy
@@ -10,8 +13,8 @@ services:
       - ./.env
     volumes:
       - ./backend/:/go/src/backend
-      - $HTTPS_SSL/fullchain.pem:/etc/letsencrypt/live/vps.osac.org.np/fullchain.pem
-      - $HTTPS_SSL/privkey.pem:/etc/letsencrypt/live/vps.osac.org.np/privkey.pem
+      - $SSL_CERT:$SSL_CERT
+      - $SSL_KEY:$SSL_KEY
     ports:
       - "8080:8080"
     networks:
@@ -20,31 +23,17 @@ services:
   hackernews-frontend-dev:
     build:
       context: ./frontend
-      dockerfile: Dockerfile-dev
+      target: dev
+    command: make dev
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./frontend/:/frontend/app
-    ports:
-      - "8000:8000"
-    networks:
-      - docker-network
-
-  hackernews-frontend-prod:
-    build: ./frontend
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - $PWD/frontend/:/frontend/app
-      - $HTTPS_SSL/fullchain.pem:/etc/letsencrypt/live/vps.osac.org.np/fullchain.pem
-      - $HTTPS_SSL/privkey.pem:/etc/letsencrypt/live/vps.osac.org.np/privkey.pem
     env_file:
       - ./.env
+    volumes:
+      - ./frontend/:/node/src/frontend
     ports:
-      - "443:443"
-      - "9000:443"
+      - "8000:8000"
     networks:
       - docker-network
 
