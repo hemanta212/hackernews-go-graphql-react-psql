@@ -28,7 +28,7 @@ gqlgen-init:
 
 docker-up: vendor
 	docker build -t hackernews-dev .
-	docker run -it --rm -v $(HTTPS_SSL)/fullchain.pem:/etc/letsencrypt/live/vps.osac.org.np/fullchain.pem -v $(HTTPS_SSL)/privkey.pem:/etc/letsencrypt/live/vps.osac.org.np/privkey.pem -v $(PWD):/go/src/backend --net=host --env-file=.env hackernews-dev
+	docker run -it --rm -v $(SSL_CERT):$(SSL_CERT) -v $(SSL_KEY):$(SSL_KEY) -v $(PWD):/go/src/backend --net=host --env-file=.env hackernews-dev
 
 docker-db:
 	@ docker exec -it postgres psql -U $(PGUSER) -d $(PGDATABASE)

@@ -18,7 +18,6 @@ import { AUTH_TOKEN } from "./constants";
 import "./styles/index.css";
 import App from "./components/App";
 
-console.log(import.meta.env.VITE_DEV_API_URL);
 const httpLink = createHttpLink({
   uri:
     import.meta.env.MODE == "production"
