@@ -18,11 +18,12 @@ import { AUTH_TOKEN } from "./constants";
 import "./styles/index.css";
 import App from "./components/App";
 
+console.log(import.meta.env.VITE_DEV_API_URL);
 const httpLink = createHttpLink({
   uri:
     import.meta.env.MODE == "production"
       ? import.meta.env.VITE_API_URL
-      : "http://localhost:8080/query",
+      : import.meta.env["VITE_DEV_API_URL"] || "http://localhost:8080/query",
 });
 
 const authLink = setContext((_, { headers }) => {
@@ -40,7 +41,7 @@ const wsLink = new GraphQLWsLink(
     url:
       import.meta.env.MODE == "production"
         ? import.meta.env.VITE_API_WS_URL
-        : "ws://localhost:8080/query",
+        : import.meta.env.VITE_DEV_API_WSL_URL || "ws://localhost:8080/query",
     options: {
       connectionParams: {
         authToken: localStorage.getItem(AUTH_TOKEN),

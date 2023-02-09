@@ -24,13 +24,15 @@ POSTGRES_DB=$PGDATABASE
 
 # HTTPS_SSL=/folder/to/the/ssl/certs/and/keys
 
-# VITE_API_URL=https://yoursite.com:port/query
-# VITE_API_WS_URL=wss://yoursite.com:port/query
+VITE_API_URL=http://localhost:8008/query
+VITE_API_WS_URL=ws://localhost:8008/query
 ```
 
-- `HTTPS_SSL` refers to the folder containing, `fullchain.pem` and `privkey.pem` file, If you have these certs, uncomment the line in above `.env` file, and point vite api to https and wss version of your site, otherwise let it be commented, and it will run on port 80 with http.
+- OPTIONAL: `HTTPS_SSL` refers to the folder containing, `fullchain.pem` and `privkey.pem` file, If you have these certs, uncomment the line in above `.env` file, and point `VITE_API_*` vars to https and wss version of your site, otherwise let it be commented, and it will run on port 80 with http.
 
 - Run the command `docker compose up`
+
+- Navigate to: http://localhost or http://localhost:9000 to see the react site, similarly the graphql api playground will be hosted on http://localhost:8080
 
 ## Running with ssl mode
 
@@ -38,7 +40,7 @@ POSTGRES_DB=$PGDATABASE
 
 ```sh
 source .env
-docker compose up
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up
 ```
 
 ## Frontend
@@ -49,7 +51,7 @@ docker compose up
 - Here's the schema
 
 ```graphql
-    type Feed {
+type Feed {
      id: ID!
      links: [Link!]!
      count: Int!
@@ -85,6 +87,19 @@ type Query {
      feed(filter: String, offset: Int, limit: Int, orderBy: LinkOrderByInput): Feed!
 }
 
+type Mutation {
+     post(input: NewLink!): Link!
+     signup(input: NewUser!): AuthPayload
+     login(input: Login!): AuthPayload
+     vote(linkID: ID!): Vote
+     refreshToken(input: RefreshTokenInput!): String!
+}
+
+type Subscription{
+     newLink: Link!
+     newVote: Vote!
+}
+
 input RefreshTokenInput {
       token: String!
 }
@@ -108,19 +123,6 @@ input Login {
 input LinkOrderByInput {
   description: Sort
   createdAt: Sort
-}
-
-type Mutation {
-     post(input: NewLink!): Link!
-     signup(input: NewUser!): AuthPayload
-     login(input: Login!): AuthPayload
-     vote(linkID: ID!): Vote
-     refreshToken(input: RefreshTokenInput!): String!
-}
-
-type Subscription{
-     newLink: Link!
-     newVote: Vote!
 }
 
 enum Sort {
