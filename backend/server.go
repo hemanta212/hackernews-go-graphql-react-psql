@@ -64,13 +64,11 @@ func main() {
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-
-	SSL_PATH := os.Getenv("HTTPS_SSL")
-	if SSL_PATH != "" {
-		log.Printf("HTTPS_SSL env var is exported to %s, initiating https protocol", SSL_PATH)
+	SSLPath := os.Getenv("HTTPS_SSL")
+	if SSLPath != "" {
+		log.Printf("HTTPS_SSL env var is exported to %s, initiating https protocol", SSLPath)
 		log.Printf("connect to https://localhost:%s/ for GraphQL playground", port)
-		log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSL_PATH+"fullchain.pem", SSL_PATH+"privkey.pem", router))
+		log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSLPath+"fullchain.pem", SSLPath+"privkey.pem", router))
 	} else {
 		log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 		log.Fatal(http.ListenAndServe("0.0.0.0:"+port, router))
