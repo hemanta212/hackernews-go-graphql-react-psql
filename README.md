@@ -1,6 +1,5 @@
 # FullStack HackerNews Frontend
 
-Running at: https://vps.osac.org.np
 Trying to clone: https://news.ycombinator.com
 
 ## Installation
@@ -9,7 +8,7 @@ Trying to clone: https://news.ycombinator.com
 
 - clone this repository with git
 
-- cd to the cloned folder, create and populate a .env file.
+- cd to the cloned folder, create and populate a `.env` file in the topmost/root folder.
 
 ```shell
 PGUSER=user123
@@ -17,27 +16,31 @@ PGPASSWORD=pass123
 PGHOST=postgres
 PGPORT=5432
 PGDATABASE=hackernews
-PG_DATABASE_URI=postgres://$PGUSER:$PGPASSWORD@$PGHOST/$PGDATABASE
 
 POSTGRES_USER=$PGUSER
 POSTGRES_PASSWORD=$PGPASSWORD
 POSTGRES_HOST=localhost
 POSTGRES_DB=$PGDATABASE
 
-HTTPS_SSL=/folder/to/the/ssl/certs/and/keys
+# HTTPS_SSL=/folder/to/the/ssl/certs/and/keys
+
+# VITE_API_URL=https://yoursite.com:port/query
+# VITE_API_WS_URL=wss://yoursite.com:port/query
 ```
 
-- If you don't set the HTTP_SSL then the site will run on http at port 80
+- `HTTPS_SSL` refers to the folder containing, `fullchain.pem` and `privkey.pem` file, If you have these certs, uncomment the line in above `.env` file, and point vite api to https and wss version of your site, otherwise let it be commented, and it will run on port 80 with http.
 
 - Run the command `docker compose up`
 
 ## Running with ssl mode
 
-- Make sure to export HTTPS_SSL env var to the directory containing the ssl certs before running
+- Export the `HTTPS_SSL`, `VITE_API_URL` and `VITE_API_WS_URL` env variable in the .env file and source it in your terminal
 
 ```sh
+source .env
 docker compose up
 ```
+
 ## Frontend
 - Uses React.js + Vite with Apollo client library
 
