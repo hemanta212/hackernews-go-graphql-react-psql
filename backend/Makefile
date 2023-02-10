@@ -11,7 +11,7 @@ dev: migrate-up
 build: vendor
 	@ go build -o ./build/ .
 
-run: build
+run: build migrate-up
 	@ ./build/hackernews-go-graphql
 
 vendor:

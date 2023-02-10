@@ -37,7 +37,9 @@ VITE_API_WS_URL=ws://localhost:8008/query
 
 - Navigate to: http://localhost:8000 to see the frontend, similarly the graphql api playground will be hosted on http://localhost:8080
 
-- To get a Prod build (without ssl), `export HTTPS_SSL_PATH=/non/existent/path` and run `docker compose -f docker-compose.yml -f docker-compose.prod.yml up`
+- To get a Prod build (without ssl), run
+ `HTTPS_SSL_PATH=/na SSL_CERT_FILE=/na SSL_KEY_FILE=/na docker compose -f docker-compose.yml -f docker-compose.prod.yml up`
+
   This will spin up the production go server at port 8008 and frontend at both ports 443 and 9000.
 
 ## Running with SSL mode

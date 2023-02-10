@@ -4,7 +4,6 @@ RUN apk add --no-cache make\
 WORKDIR /go/src/backend
 ENV GO111MODULE=on
 ENV GOFLAGS=-mod=vendor
-COPY Makefile go.mod go.sum ./
 
 FROM dev as builder
 COPY . ./
