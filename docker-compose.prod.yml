@@ -9,8 +9,7 @@ services:
     env_file:
       - ./.env
     volumes:
-      - $SSL_CERT:$SSL_CERT
-      - $SSL_KEY:$SSL_KEY
+      - $HTTPS_SSL_PATH:$HTTPS_SSL_PATH
     ports:
       - "8008:8080"
     networks:
@@ -23,8 +22,7 @@ services:
         condition: service_healthy
     volumes:
       - ./frontend/:/node/src/frontend
-      - $SSL_CERT:$SSL_CERT
-      - $SSL_KEY:$SSL_KEY
+      - $HTTPS_SSL_PATH:$HTTPS_SSL_PATH
     env_file:
       - ./.env
     ports:

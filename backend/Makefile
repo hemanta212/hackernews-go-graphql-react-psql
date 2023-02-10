@@ -26,10 +26,6 @@ gqlgen-gen:
 gqlgen-init:
 	go run github.com/99designs/gqlgen@latest init
 
-docker-up: vendor
-	docker build -t hackernews-dev .
-	docker run -it --rm -v $(SSL_CERT):$(SSL_CERT) -v $(SSL_KEY):$(SSL_KEY) -v $(PWD):/go/src/backend --net=host --env-file=.env hackernews-dev
-
 docker-db:
 	@ docker exec -it postgres psql -U $(PGUSER) -d $(PGDATABASE)
 

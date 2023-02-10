@@ -5,7 +5,6 @@ WORKDIR /go/src/backend
 ENV GO111MODULE=on
 ENV GOFLAGS=-mod=vendor
 COPY Makefile go.mod go.sum ./
-RUN make vendor
 
 FROM dev as builder
 COPY . ./

@@ -78,13 +78,15 @@ func main() {
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 
-	SSLCert, SSLKey := os.Getenv("SSL_CERT"), os.Getenv("SSL_KEY")
-	if SSLCert != "" && SSLKey != "" {
-		log.Printf("SSL env vars is exported to %q, %q, initiating https protocol", SSLCert, SSLKey)
+	// check if sslkey and sslcert are exported and exists, then run respective servers accordingly
+	SSLPath := os.Getenv("HTTPS_SSL_PATH")
+	SSLCert, SSLKey := os.Getenv("SSL_CERT_FILE"), os.Getenv("SSL_KEY_FILE")
+	if SSLPath != "" && SSLKey != "" && SSLCert != "" {
+		log.Printf("SSL env vars is exported to %q, %q, %q, initiating https protocol", SSLPath, SSLCert, SSLKey)
 		log.Printf("connect to https://localhost:%s/ for GraphQL playground", port)
-		log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSLCert, SSLKey, router))
+		log.Fatal(http.ListenAndServeTLS("0.0.0.0:"+port, SSLPath+"/"+SSLCert, SSLPath+"/"+SSLKey, router))
 	} else {
-		log.Printf("SSL env vars not exported cert,key pair -> %q, %q, using http", SSLCert, SSLKey)
+		log.Printf("SSL vars not exported sslPath, cert,key pair -> %q, %q, %q, using http", SSLPath, SSLCert, SSLKey)
 		log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 		log.Fatal(http.ListenAndServe("0.0.0.0:"+port, router))
 	}

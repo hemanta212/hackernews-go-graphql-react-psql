@@ -5,7 +5,7 @@ services:
     build:
       context: ./backend
       target: dev
-    command: make dev
+    command: make run
     depends_on:
       postgres:
         condition: service_healthy
@@ -13,8 +13,6 @@ services:
       - ./.env
     volumes:
       - ./backend/:/go/src/backend
-      - $SSL_CERT:$SSL_CERT
-      - $SSL_KEY:$SSL_KEY
     ports:
       - "8080:8080"
     networks:
