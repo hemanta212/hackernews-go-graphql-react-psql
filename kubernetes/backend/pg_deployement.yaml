@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:latest
+          envFrom:
+            - configMapRef:
+                name: backend-env-config
+          ports:
+            - containerPort: 5432
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - "-d"
+                - "hackernews"
+            initialDelaySeconds: 80
+            periodSeconds: 10
+            timeoutSeconds: 60
+            failureThreshold: 5

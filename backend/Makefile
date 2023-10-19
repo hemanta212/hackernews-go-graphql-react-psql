@@ -5,6 +5,11 @@ V?=
 # Number of migrations - this is optionally used on up and down commands
 N?=
 
+APP?=hackernews
+PORT?=8080
+RELEASE?=0.0.1
+
+
 dev: migrate-up
 	@ go run ./server.go
 
@@ -57,3 +62,17 @@ force-version: migrate-setup
 
 migration-version: migrate-setup
 	@ migrate -database 'postgres://$(PSQL_DSN)' -path $(PSQL_MIGRATION_DIR) version
+
+container: 
+	docker compose -f ../docker-compose.prod.yml build
+
+minikube: container
+	minikube image load $(APP):$(RELEASE)
+	for t in $(shell find ../kubernetes/backend -type f -name "*.yaml"); do \
+	cat $$t | \
+    	sed -E "s/\{ \{(\s*)\.Release(\s*)\} \}/$(RELEASE)/g" | \
+    	sed -E "s/\{ \{(\s*)\.ServiceName(\s*)\} \}/$(APP)/g"; \
+	echo ---; \
+    done > tmp.yaml
+
+	minikube kubectl -- apply -f tmp.yaml
