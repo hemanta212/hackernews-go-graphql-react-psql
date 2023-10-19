@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: { { .ServiceName } }
+  labels:
+    app: { { .ServiceName } }
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: { { .ServiceName } }
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: { { .ServiceName } }
+    spec:
+      containers:
+        - name: { { .ServiceName } }
+          image: { { .ServiceName } }:{ { .Release } }
+          imagePullPolicy: IfNotPresent
+          envFrom:
+          - configMapRef:
+              name: frontend-env-config
+          ports:
+            - containerPort: 8080
+      terminationGracePeriodSeconds: 30

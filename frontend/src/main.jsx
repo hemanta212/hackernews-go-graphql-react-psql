@@ -25,6 +25,10 @@ const httpLink = createHttpLink({
       : import.meta.env["VITE_DEV_API_URL"] || "http://localhost:8080/query",
 });
 
+console.log("PROD API ", import.meta.env.VITE_API_URL);
+console.log("USING API URL", httpLink._uri);
+console.log("USING API URL2", httpLink.uri);
+
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem(AUTH_TOKEN);
   return {

@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+  labels:
+    app: { { .ServiceName } }
+  name: { { .ServiceName } }
+spec:
+  ingressClassName: nginx
+  tls:
+    # openssl req -x509 -out localhost.crt -keyout localhost.key -newkey rsa:2048 -nodes -sha256 -subj '/CN=localhost'
+    # kubectl create secret tls localhost-tls --key localhost.key --cert localhost.crt
+    - secretName: localhost-tls
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: { { .ServiceName } }
+                port:
+                  number: 8080
