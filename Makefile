@@ -15,3 +15,8 @@ frontend:
 .PHONY: backend
 backend:
 	cd backend && make minikube
+
+.PHONY: portf
+portf:
+	minikube kubectl port-forward service/hackernews 8080:8080 &
+	minikube kubectl port-forward service/hackernews-frontend 8000:80 &
