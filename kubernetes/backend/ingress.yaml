@@ -7,16 +7,15 @@ metadata:
     app: { { .ServiceName } }
   name: { { .ServiceName } }
 spec:
-  defaultBackend:
-    service:
-      name: { { .ServiceName } }
-      port:
-        number: 8080
   ingressClassName: nginx
+  tls:
+    # openssl req -x509 -out localhost.crt -keyout localhost.key -newkey rsa:2048 -nodes -sha256 -subj '/CN=localhost'
+    # kubectl create secret tls localhost-tls --key localhost.key --cert localhost.crt
+    - secretName: localhost-tls
   rules:
     - http:
         paths:
-          - path: /
+          - path: /api
             pathType: Prefix
             backend:
               service:

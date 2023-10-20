@@ -56,6 +56,7 @@ func main() {
 
 	database.InitDB()
 	defer database.CloseDB()
+	database.Migrate()
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
 		LinkObservers: map[string]chan *model.Link{},

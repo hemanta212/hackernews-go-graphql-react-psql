@@ -13,4 +13,5 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /go/src/backend/build/hackernews-go-graphql ./
+COPY --from=builder /go/src/backend/internal/pkg/db/migrations/postgresql ./internal/pkg/db/migrations/postgresql
 CMD ["./hackernews-go-graphql"]

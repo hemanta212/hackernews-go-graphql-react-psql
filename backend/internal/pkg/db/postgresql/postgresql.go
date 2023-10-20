@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/golang-migrate/migrate"
-	"github.com/golang-migrate/migrate/database/postgres"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -35,13 +35,22 @@ func Migrate() {
 	if err := Db.Ping(); err != nil {
 		log.Panic(err)
 	}
-	driver, _ := postgres.WithInstance(Db, &postgres.Config{})
-	m, _ := migrate.NewWithDatabaseInstance(
+
+	driver, err := postgres.WithInstance(Db, &postgres.Config{})
+	if err != nil {
+		log.Panicf("Failed to create postgres driver instance: %v", err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(
 		"file://internal/pkg/db/migrations/postgresql",
 		"postgres",
 		driver,
 	)
+	if err != nil {
+		log.Panicf("Failed to create migrate instance: %v", err)
+	}
+
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		log.Fatal(err)
+		log.Fatalf("Failed while migrating %v", err)
 	}
 }

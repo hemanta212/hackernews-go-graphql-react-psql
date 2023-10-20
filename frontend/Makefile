@@ -1,4 +1,7 @@
 SERVE_PATH := $(shell which serve)
+APP?=hackernews-frontend
+RELEASE?=0.0.1
+
 
 dev:
 	@ npm install
@@ -16,3 +19,17 @@ deploy:
 	fi
 
 run: build deploy
+
+container: build
+	docker compose -f ../docker-compose.prod.yml build
+
+minikube: container
+	minikube image load $(APP):$(RELEASE)
+	for t in $(shell find ../kubernetes/frontend -type f -name "*.yaml"); do \
+	cat $$t | \
+    	sed -E "s/\{ \{(\s*)\.Release(\s*)\} \}/$(RELEASE)/g" | \
+    	sed -E "s/\{ \{(\s*)\.ServiceName(\s*)\} \}/$(APP)/g"; \
+	echo ---; \
+    done > tmp.yaml
+
+	minikube kubectl -- apply -f tmp.yaml
